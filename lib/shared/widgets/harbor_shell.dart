@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_theme.dart';
 import '../../features/ledger/presentation/cubit/ledger_cubit.dart';
+import 'edge_blur_overlay.dart';
+import 'glass_chrome.dart';
 
 class HarborShell extends StatefulWidget {
   const HarborShell({super.key, required this.navigationShell});
@@ -96,7 +97,6 @@ class _HarborShellState extends State<HarborShell> {
   Widget build(BuildContext context) {
     final navigationShell = widget.navigationShell;
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final bottomInset = MediaQuery.paddingOf(context).bottom;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -106,168 +106,146 @@ class _HarborShellState extends State<HarborShell> {
           extendBody: true,
           // Let each tab's scrollable content continue behind the floating
           // navigation surface.
-          body: SafeArea(bottom: false, child: navigationShell),
+          body: SafeArea(
+            top: false,
+            bottom: false,
+            child: navigationShell,
+          ),
         ),
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          height: 86 + bottomInset,
           child: Material(
             color: Colors.transparent,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                alpha: dark ? .16 : .05,
-                              ),
-                              blurRadius: 28,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(32),
-                          child: Container(
-                              height: 64,
-                              decoration: BoxDecoration(
-                                color: dark
-                                    ? Colors.white.withValues(alpha: .035)
-                                    : Colors.black.withValues(alpha: .022),
-                                borderRadius: BorderRadius.circular(32),
-                                border: Border.all(
-                                  color: dark
-                                      ? Colors.white.withValues(alpha: .05)
-                                      : Colors.black.withValues(alpha: .035),
-                                  width: .65,
-                                ),
-                              ),
-                              child: LayoutBuilder(
-                                builder: (context, constraints) {
-                                  final tabWidth =
-                                      constraints.maxWidth /
-                                      HarborShell._destinations.length;
-                                  return Stack(
-                                    children: [
-                                      AnimatedPositioned(
-                                        duration: const Duration(
-                                          milliseconds: 280,
-                                        ),
-                                        curve: Curves.easeInOutCubic,
-                                        top: 6,
-                                        bottom: 6,
-                                        left:
-                                            navigationShell.currentIndex *
-                                                tabWidth +
-                                            6,
-                                        width: tabWidth - 12,
-                                        child: DecoratedBox(
-                                          decoration: BoxDecoration(
-                                            color: dark
-                                                ? Colors.white.withValues(
-                                                    alpha: .016,
-                                                  )
-                                                : Colors.black.withValues(
-                                                    alpha: .012,
-                                                  ),
-                                            border: Border.all(
-                                              color: dark
-                                                  ? Colors.white.withValues(
-                                                      alpha: .035,
-                                                    )
-                                                  : Colors.black.withValues(
-                                                      alpha: .025,
-                                                    ),
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              22,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(alpha: .03),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 0,
-                                        left: 28,
-                                        right: 28,
-                                        height: 2,
-                                        child: IgnorePointer(
-                                          child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                colors: [
-                                                  Colors.transparent,
-                                                  Colors.white.withValues(
-                                                    alpha: dark ? .02 : .07,
-                                                  ),
-                                                  Colors.transparent,
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          for (
-                                            var index = 0;
-                                            index <
-                                                HarborShell
-                                                    ._destinations
-                                                    .length;
-                                            index++
-                                          )
-                                            Expanded(
-                                              child: _TabButton(
-                                                destination: HarborShell
-                                                    ._destinations[index],
-                                                selected:
-                                                    navigationShell
-                                                        .currentIndex ==
-                                                    index,
-                                                onTap: () =>
-                                                    navigationShell.goBranch(
-                                                      index,
-                                                      initialLocation:
-                                                          index ==
-                                                          navigationShell
-                                                              .currentIndex,
-                                                    ),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                          ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: -14,
+                      right: -14,
+                      bottom: 0,
+                      height: 64 + 88,
+                      child: const IgnorePointer(
+                        child: EdgeBlurOverlay(
+                          placement: EdgeBlurPlacement.bottom,
+                          blurSigma: 34,
                         ),
                       ),
                     ),
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(
+                              alpha: dark ? .14 : .045,
+                            ),
+                            blurRadius: 24,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: HarborGlassChrome(
+                        edge: HarborGlassChromeEdge.rounded,
+                        borderRadius: BorderRadius.circular(32),
+                        blurSigma: 34,
+                        frostScale: 0.3,
+                        child: SizedBox(
+                          height: 64,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final tabWidth =
+                                  constraints.maxWidth /
+                                  HarborShell._destinations.length;
+                              return Stack(
+                                children: [
+                                  AnimatedPositioned(
+                                    duration: const Duration(
+                                      milliseconds: 280,
+                                    ),
+                                    curve: Curves.easeInOutCubic,
+                                    top: 6,
+                                    bottom: 6,
+                                    left:
+                                        navigationShell.currentIndex *
+                                            tabWidth +
+                                        6,
+                                    width: tabWidth - 12,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        color: dark
+                                            ? Colors.white.withValues(
+                                                alpha: .016,
+                                              )
+                                            : Colors.black.withValues(
+                                                alpha: .012,
+                                              ),
+                                        border: Border.all(
+                                          color: dark
+                                              ? Colors.white.withValues(
+                                                  alpha: .035,
+                                                )
+                                              : Colors.black.withValues(
+                                                  alpha: .025,
+                                                ),
+                                        ),
+                                        borderRadius: BorderRadius.circular(22),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: .03),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      for (
+                                        var index = 0;
+                                        index <
+                                            HarborShell._destinations.length;
+                                        index++
+                                      )
+                                        Expanded(
+                                          child: _TabButton(
+                                            destination: HarborShell
+                                                ._destinations[index],
+                                            selected:
+                                                navigationShell
+                                                    .currentIndex ==
+                                                index,
+                                            onTap: () =>
+                                                navigationShell.goBranch(
+                                              index,
+                                              initialLocation:
+                                                  index ==
+                                                  navigationShell
+                                                      .currentIndex,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                      ),
+                    ),
                   ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
@@ -282,7 +260,17 @@ class _AmbientBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(color: dark ? AppTheme.darkCanvas : AppTheme.lightCanvas);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: dark
+              ? const [Color(0xFF000000), Color(0xFF0A1018)]
+              : const [Color(0xFFF8FAFC), Color(0xFFEEF2F6)],
+        ),
+      ),
+    );
   }
 }
 

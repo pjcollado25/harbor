@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
+import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
@@ -36,13 +38,10 @@ class ActivityPage extends StatelessWidget {
             (bill) => bill.isActive && bill.frequency != BillFrequency.once,
           )
           .fold<int>(0, (sum, bill) => sum + bill.amount);
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 120),
+      return HarborStickyScrollView(
+        title: 'Activity',
+        subtitle: 'Payments and income you recorded',
         children: [
-          const ScreenHeading(
-            title: 'Activity',
-            subtitle: 'Payments and income you recorded',
-          ),
           SectionLabel('This month'),
           Row(
             children: [
@@ -101,9 +100,12 @@ class ActivityPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
+                      Text(
                         'Listed recurring amounts',
-                        style: TextStyle(fontSize: 11, color: Colors.white54),
+                        style: context.harborMutedText(
+                          alpha: 0.54,
+                          fontSize: 11,
+                        ),
                       ),
                     ],
                   ),
@@ -134,9 +136,9 @@ class ActivityPage extends StatelessWidget {
                   radius: 18,
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.check_circle_outline_rounded,
-                        color: Color(0xFF73B3FF),
+                        color: Theme.of(context).colorScheme.primary,
                         size: 19,
                       ),
                       const SizedBox(width: 10),
@@ -197,9 +199,9 @@ class ActivityPage extends StatelessWidget {
                   radius: 18,
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.south_west_rounded,
-                        color: Color(0xFF73B3FF),
+                        color: Theme.of(context).colorScheme.primary,
                         size: 19,
                       ),
                       const SizedBox(width: 10),

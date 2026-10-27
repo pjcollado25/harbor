@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
+import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
@@ -45,28 +47,11 @@ class TodayPage extends StatelessWidget {
             ..sort((a, b) => a.expectedDate.compareTo(b.expectedDate));
       if (state.isLoading)
         return const Center(child: CircularProgressIndicator());
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 120),
+      return HarborStickyScrollView(
+        title: 'Today',
+        subtitle: formatLongDate(today),
+        leading: const _Wordmark(),
         children: [
-          const _Wordmark(),
-          const SizedBox(height: 16),
-          Text(
-            'Today',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-              letterSpacing: -.6,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            formatLongDate(today),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(
-                context,
-              ).colorScheme.onSurface.withValues(alpha: .62),
-            ),
-          ),
-          const SizedBox(height: 22),
           if (next == null)
             HarborEmptyState(
               title: 'Start with what’s due',
@@ -167,10 +152,10 @@ class TodayPage extends StatelessWidget {
             onAction: () => context.go('/bills'),
           ),
           if (next14.isEmpty)
-            const GlassPanel(
+            GlassPanel(
               child: Text(
                 'Nothing is due in the next 14 days.',
-                style: TextStyle(color: Colors.white70),
+                style: context.harborMutedText(alpha: 0.7),
               ),
             )
           else ...[
@@ -214,9 +199,9 @@ class TodayPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'A plan estimate, not a bank balance.',
-                    style: TextStyle(fontSize: 12, color: Colors.white54),
+                    style: context.harborMutedText(alpha: 0.54, fontSize: 12),
                   ),
                 ],
               ),
@@ -232,9 +217,9 @@ class TodayPage extends StatelessWidget {
             GlassPanel(
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.south_west_rounded,
-                    color: Color(0xFF73B3FF),
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -278,7 +263,11 @@ class _Wordmark extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      const Icon(Icons.water_drop_rounded, color: Color(0xFF73B3FF), size: 16),
+      Icon(
+        Icons.water_drop_rounded,
+        color: Theme.of(context).colorScheme.primary,
+        size: 16,
+      ),
       const SizedBox(width: 6),
       Text(
         'HARBOR',
@@ -364,9 +353,9 @@ class _IncomePreview extends StatelessWidget {
       radius: 18,
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.south_west_rounded,
-            color: Color(0xFF73B3FF),
+            color: Theme.of(context).colorScheme.primary,
             size: 19,
           ),
           const SizedBox(width: 11),

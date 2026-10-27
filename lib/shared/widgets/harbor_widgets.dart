@@ -9,13 +9,17 @@ class ScreenHeading extends StatelessWidget {
     required this.title,
     this.subtitle,
     this.trailing,
+    this.compact = false,
   });
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final bool compact;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+    padding: compact
+        ? const EdgeInsets.fromLTRB(2, 0, 2, 2)
+        : const EdgeInsets.fromLTRB(22, 8, 22, 16),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

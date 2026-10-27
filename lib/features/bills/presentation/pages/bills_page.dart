@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
+import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
@@ -35,19 +36,16 @@ class _BillsPageState extends State<BillsPage> {
                 (_filter == 'Open' ? status != 'Paid' : status == _filter)) &&
             bill.name.toLowerCase().contains(_query.toLowerCase());
       }).toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+      return HarborStickyScrollView(
+        title: 'Bills',
+        subtitle:
+            '${snapshot.bills.length} listed obligation${snapshot.bills.length == 1 ? '' : 's'}',
+        trailing: IconButton.filledTonal(
+          onPressed: () => context.push('/bills/new'),
+          icon: const Icon(Icons.add_rounded),
+          tooltip: 'Add bill',
+        ),
         children: [
-          ScreenHeading(
-            title: 'Bills',
-            subtitle:
-                '${snapshot.bills.length} listed obligation${snapshot.bills.length == 1 ? '' : 's'}',
-            trailing: IconButton.filledTonal(
-              onPressed: () => context.push('/bills/new'),
-              icon: const Icon(Icons.add_rounded),
-              tooltip: 'Add bill',
-            ),
-          ),
           TextField(
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search_rounded),

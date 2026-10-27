@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
+import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
@@ -24,13 +26,10 @@ class SettingsPage extends StatelessWidget {
     },
     builder: (context, state) {
       final prefs = state.snapshot.preferences;
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 120),
+      return HarborStickyScrollView(
+        title: 'Settings',
+        subtitle: 'Manage how Harbor looks and works',
         children: [
-          const ScreenHeading(
-            title: 'Settings',
-            subtitle: 'Manage how Harbor looks and works',
-          ),
           SectionLabel('Appearance'),
           GlassPanel(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
@@ -177,10 +176,10 @@ class SettingsPage extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          const Center(
+          Center(
             child: Text(
               'Harbor · Your plan, your pace',
-              style: TextStyle(fontSize: 12, color: Colors.white54),
+              style: context.harborMutedText(alpha: 0.54, fontSize: 12),
             ),
           ),
         ],

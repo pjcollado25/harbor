@@ -169,9 +169,9 @@ class BillDetailPage extends StatelessWidget {
                     radius: 18,
                     child: Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.check_circle_outline_rounded,
-                          color: Color(0xFF73B3FF),
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 10),
                         Expanded(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
@@ -117,9 +118,9 @@ class _PaymentFormPageState extends State<PaymentFormPage> {
                 decoration: const InputDecoration(labelText: 'Note (optional)'),
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'This payment is recorded from your entry. Harbor does not connect to your bank.',
-                style: TextStyle(fontSize: 12, color: Colors.white60),
+                style: context.harborMutedText(alpha: 0.6, fontSize: 12),
               ),
               const SizedBox(height: 22),
               FilledButton(

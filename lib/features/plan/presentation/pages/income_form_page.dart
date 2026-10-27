@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
 import '../../../../features/ledger/domain/entities/ledger_entities.dart';
@@ -102,9 +103,9 @@ class _IncomeFormPageState extends State<IncomeFormPage> {
             },
           ),
           const SizedBox(height: 12),
-          const Text(
+          Text(
             'Only mark income received after you confirm it arrived. This is not bank-verified.',
-            style: TextStyle(fontSize: 12, color: Colors.white60),
+            style: context.harborMutedText(alpha: 0.6, fontSize: 12),
           ),
           const SizedBox(height: 22),
           FilledButton(onPressed: _save, child: const Text('Save income')),

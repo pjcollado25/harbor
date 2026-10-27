@@ -103,3 +103,22 @@ class AppTheme {
     );
   }
 }
+
+extension HarborThemeContext on BuildContext {
+  Color harborOnSurface([double alpha = 0.62]) =>
+      Theme.of(this).colorScheme.onSurface.withValues(alpha: alpha);
+
+  TextStyle harborMutedText({
+    double alpha = 0.62,
+    double? fontSize,
+    FontWeight? fontWeight,
+  }) {
+    final theme = Theme.of(this);
+    final base = theme.textTheme.bodySmall ?? theme.textTheme.bodyMedium!;
+    return base.copyWith(
+      fontSize: fontSize ?? base.fontSize,
+      fontWeight: fontWeight ?? base.fontWeight,
+      color: theme.colorScheme.onSurface.withValues(alpha: alpha),
+    );
+  }
+}

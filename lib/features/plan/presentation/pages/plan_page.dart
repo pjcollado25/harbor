@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
+import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
@@ -67,18 +68,15 @@ class _PlanPageState extends State<PlanPage> {
           _delayedOriginal ??
           (expectedIncomes.isEmpty ? null : expectedIncomes.first);
       final changed = _delayedOriginal != null;
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 14, 20, 120),
+      return HarborStickyScrollView(
+        title: 'Plan',
+        subtitle: 'Known bills and income you entered',
+        trailing: IconButton.filledTonal(
+          onPressed: () => context.push('/income/new'),
+          icon: const Icon(Icons.add_rounded),
+          tooltip: 'Add expected income',
+        ),
         children: [
-          ScreenHeading(
-            title: 'Plan',
-            subtitle: 'Known bills and income you entered',
-            trailing: IconButton.filledTonal(
-              onPressed: () => context.push('/income/new'),
-              icon: const Icon(Icons.add_rounded),
-              tooltip: 'Add expected income',
-            ),
-          ),
           GlassPanel(
             padding: const EdgeInsets.all(5),
             radius: 18,

@@ -63,7 +63,9 @@ class GlassPanel extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            Colors.white.withValues(alpha: dark ? .025 : .09),
+                            (dark ? Colors.white : Colors.black).withValues(
+                              alpha: dark ? .025 : .05,
+                            ),
                             Colors.transparent,
                           ],
                         ),

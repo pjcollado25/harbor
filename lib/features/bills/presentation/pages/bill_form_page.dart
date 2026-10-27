@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
@@ -168,9 +169,9 @@ class _BillFormPageState extends State<BillFormPage> {
             },
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Reminders are scheduled on this device. You can change notification permission in Settings.',
-            style: TextStyle(fontSize: 12, color: Colors.white60),
+            style: context.harborMutedText(alpha: 0.6, fontSize: 12),
           ),
           const SizedBox(height: 24),
           FilledButton(

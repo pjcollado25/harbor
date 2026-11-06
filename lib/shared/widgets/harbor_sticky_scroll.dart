@@ -1,11 +1,15 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 
-import 'glass_chrome.dart';
+import 'harbor_sticky_header_surface.dart';
 
 /// Tab root layout with a collapsing glass header (large at top, compact on scroll).
-class HarborStickyScrollView extends StatelessWidget {
+///
+/// Uses [SoftEdgeBlur] on the scroll view so list content blurs under the header band
+/// while title copy stays sharp in a separate overlay.
+class HarborStickyScrollView extends StatefulWidget {
   const HarborStickyScrollView({
     super.key,
     required this.title,
@@ -15,6 +19,10 @@ class HarborStickyScrollView extends StatelessWidget {
     this.trailing,
     this.horizontalPadding = 20,
     this.bottomPadding = 120,
+    this.keepSubtitleWhenCollapsed = false,
+    this.titleFontWeight = FontWeight.w700,
+    this.expandedTitleSize = 21,
+    this.collapsedTitleSize = 17,
   });
 
   final String title;
@@ -24,187 +32,225 @@ class HarborStickyScrollView extends StatelessWidget {
   final List<Widget> children;
   final double horizontalPadding;
   final double bottomPadding;
+  final bool keepSubtitleWhenCollapsed;
+  final FontWeight titleFontWeight;
+  final double expandedTitleSize;
+  final double collapsedTitleSize;
 
-  static const double collapsedHeight = 48;
-  static const double headerEdgeBleed = 32;
+  static const double collapsedHeight = 44;
+  static const double collapsedHeightWithSubtitle = 38;
+  static const double headerFeatherExtent = 32;
+  static const double headerEdgeBleed = 28;
 
-  double get _expandedHeight {
-    var height = 50.0 + headerEdgeBleed;
-    if (subtitle != null) height += 18;
-    if (leading != null) height += 22;
-    return height;
+  @override
+  State<HarborStickyScrollView> createState() => _HarborStickyScrollViewState();
+}
+
+class _HarborStickyScrollViewState extends State<HarborStickyScrollView> {
+  double _scrollOffset = 0;
+
+  double get _featherExtent =>
+      widget.keepSubtitleWhenCollapsed && widget.subtitle != null
+      ? HarborStickyScrollView.headerFeatherExtent
+      : HarborStickyScrollView.headerEdgeBleed;
+
+  double get _collapsedBodyHeight {
+    final base = widget.keepSubtitleWhenCollapsed && widget.subtitle != null
+        ? HarborStickyScrollView.collapsedHeightWithSubtitle
+        : HarborStickyScrollView.collapsedHeight;
+    return base + _featherExtent;
   }
 
-  double get _collapsedHeight => collapsedHeight + headerEdgeBleed;
+  double get _expandedBodyHeight {
+    var height = 48.0 + _featherExtent;
+    if (widget.subtitle != null) height += 18;
+    if (widget.leading != null) height += 22;
+    return height;
+  }
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
-    return CustomScrollView(
-      slivers: [
-        SliverPersistentHeader(
-          pinned: true,
-          delegate: _HarborCollapsingHeaderDelegate(
-            title: title,
-            subtitle: subtitle,
-            leading: leading,
-            trailing: trailing,
-            horizontalPadding: horizontalPadding,
-            topInset: topInset,
-            expandedHeight: _expandedHeight + topInset,
-            collapsedHeight: _collapsedHeight + topInset,
+    final maxHeader = _expandedBodyHeight + topInset;
+    final minHeader = _collapsedBodyHeight + topInset;
+    final collapseRange = (maxHeader - minHeader).clamp(0.0, double.infinity);
+    final collapseT = collapseRange > 0
+        ? (_scrollOffset / collapseRange).clamp(0.0, 1.0)
+        : 0.0;
+    final progress = Curves.easeInOutCubic.transform(collapseT);
+    final headerHeight = collapseRange > 0
+        ? (maxHeader - _scrollOffset.clamp(0.0, collapseRange))
+        : minHeader;
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.axis != Axis.vertical) return false;
+        final next = notification.metrics.pixels;
+        if ((next - _scrollOffset).abs() < 0.5) return false;
+        setState(() => _scrollOffset = next);
+        return false;
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          SoftEdgeBlur(
+            edges: [
+              HarborSoftEdgeBlur.topScrollEdge(
+                context,
+                height: headerHeight,
+                sigma: HarborSoftEdgeBlur.defaultTopSigma,
+              ),
+            ],
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: SizedBox(height: maxHeader)),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    widget.horizontalPadding,
+                    4,
+                    widget.horizontalPadding,
+                    widget.bottomPadding,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate(widget.children),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            horizontalPadding,
-            10,
-            horizontalPadding,
-            bottomPadding,
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: headerHeight,
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                widget.horizontalPadding,
+                topInset + 2,
+                widget.horizontalPadding,
+                0,
+              ),
+              child: _HarborCollapsingHeaderContent(
+                title: widget.title,
+                subtitle: widget.subtitle,
+                leading: widget.leading,
+                trailing: widget.trailing,
+                progress: progress,
+                keepSubtitleWhenCollapsed: widget.keepSubtitleWhenCollapsed,
+                titleFontWeight: widget.titleFontWeight,
+                expandedTitleSize: widget.expandedTitleSize,
+                collapsedTitleSize: widget.collapsedTitleSize,
+              ),
+            ),
           ),
-          sliver: SliverList(
-            delegate: SliverChildListDelegate(children),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
-class _HarborCollapsingHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _HarborCollapsingHeaderDelegate({
+class _HarborCollapsingHeaderContent extends StatelessWidget {
+  const _HarborCollapsingHeaderContent({
     required this.title,
     required this.subtitle,
     required this.leading,
     required this.trailing,
-    required this.horizontalPadding,
-    required this.topInset,
-    required this.expandedHeight,
-    required this.collapsedHeight,
+    required this.progress,
+    required this.keepSubtitleWhenCollapsed,
+    required this.titleFontWeight,
+    required this.expandedTitleSize,
+    required this.collapsedTitleSize,
   });
 
   final String title;
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
-  final double horizontalPadding;
-  final double topInset;
-  final double expandedHeight;
-  final double collapsedHeight;
+  final double progress;
+  final bool keepSubtitleWhenCollapsed;
+  final FontWeight titleFontWeight;
+  final double expandedTitleSize;
+  final double collapsedTitleSize;
 
   @override
-  double get maxExtent => expandedHeight;
-
-  @override
-  double get minExtent => collapsedHeight;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final range = maxExtent - minExtent;
-    final t = range > 0 ? (shrinkOffset / range).clamp(0.0, 1.0) : 0.0;
-    final progress = Curves.easeInOutCubic.transform(t);
-    final alignProgress = ((progress - 0.4) / 0.6).clamp(0.0, 1.0);
-    final theme = Theme.of(context);
-    final onSurface = theme.colorScheme.onSurface;
-    final titleSize = lerpDouble(21, 17, progress)!;
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final titleSize = lerpDouble(
+      expandedTitleSize,
+      collapsedTitleSize,
+      progress,
+    )!;
     final titleSpacing = lerpDouble(-0.55, -0.25, progress)!;
+    final subtitleSize = lerpDouble(14, 12, progress)!;
+    final subtitleFade = keepSubtitleWhenCollapsed
+        ? 1.0
+        : (1 - progress).clamp(0.0, 1.0);
 
-    return HarborGlassChrome(
-      edge: HarborGlassChromeEdge.bar,
-      softBottomFade: true,
-      softFadeExtent: HarborStickyScrollView.headerEdgeBleed,
-      showTopHighlight: false,
-      blurSigma: 38,
-      frostScale: 0.34,
-      padding: EdgeInsets.fromLTRB(
-        horizontalPadding,
-        topInset + 2,
-        horizontalPadding,
-        8,
-      ),
-      child: SizedBox.expand(
-        child: Align(
-          alignment: Alignment.lerp(
-            Alignment.topLeft,
-            Alignment.centerLeft,
-            alignProgress,
-          )!,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (leading != null)
-                      ClipRect(
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          heightFactor: (1 - progress).clamp(0.0, 1.0),
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 4),
-                            child: leading,
-                          ),
-                        ),
-                      ),
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: titleSize,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: titleSpacing,
-                        height: 1.12,
-                        color: onSurface,
+    return Align(
+      alignment: Alignment.topLeft,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (leading != null)
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      heightFactor: (1 - progress).clamp(0.0, 1.0),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: leading,
                       ),
                     ),
-                    if (subtitle != null)
-                      ClipRect(
-                        child: Align(
-                          alignment: Alignment.topLeft,
-                          heightFactor: (1 - progress).clamp(0.0, 1.0),
-                          child: Padding(
-                            padding: const EdgeInsets.only(top: 1),
-                            child: Text(
-                              subtitle!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: onSurface.withValues(alpha: .68),
-                                height: 1.2,
-                              ),
+                  ),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: titleSize,
+                    fontWeight: titleFontWeight,
+                    letterSpacing: titleSpacing,
+                    height: 1.12,
+                    color: onSurface,
+                  ),
+                ),
+                if (subtitle != null)
+                  ClipRect(
+                    child: Align(
+                      alignment: Alignment.topLeft,
+                      heightFactor: subtitleFade,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(
+                          subtitle!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: subtitleSize,
+                            fontWeight: FontWeight.w400,
+                            height: 1.2,
+                            color: onSurface.withValues(
+                              alpha: keepSubtitleWhenCollapsed ? 0.45 : .68,
                             ),
                           ),
                         ),
                       ),
-                  ],
-                ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 8),
-                trailing!,
+                    ),
+                  ),
               ],
-            ],
+            ),
           ),
-        ),
+          if (trailing != null) ...[
+            const SizedBox(width: 8),
+            trailing!,
+          ],
+        ],
       ),
     );
-  }
-
-  @override
-  bool shouldRebuild(covariant _HarborCollapsingHeaderDelegate oldDelegate) {
-    return oldDelegate.title != title ||
-        oldDelegate.subtitle != subtitle ||
-        oldDelegate.expandedHeight != expandedHeight ||
-        oldDelegate.collapsedHeight != collapsedHeight ||
-        oldDelegate.topInset != topInset ||
-        oldDelegate.leading != leading ||
-        oldDelegate.trailing != trailing;
   }
 }

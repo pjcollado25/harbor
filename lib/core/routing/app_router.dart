@@ -121,31 +121,18 @@ class _FadingBranchContainer extends StatefulWidget {
 
 class _FadingBranchContainerState extends State<_FadingBranchContainer> {
   @override
-  Widget build(BuildContext context) => ClipRect(
-    child: Stack(
-      children: [
-        for (var index = 0; index < widget.children.length; index++)
-          Positioned.fill(
-            child: AnimatedOpacity(
-              opacity: index == widget.currentIndex ? 1 : 0,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeInOut,
-              child: AnimatedScale(
-                scale: index == widget.currentIndex ? 1 : .99,
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                child: IgnorePointer(
-                  ignoring: index != widget.currentIndex,
-                  child: TickerMode(
-                    enabled: index == widget.currentIndex,
-                    child: widget.children[index],
-                  ),
-                ),
-              ),
-            ),
+  Widget build(BuildContext context) => Stack(
+    fit: StackFit.expand,
+    children: [
+      for (var index = 0; index < widget.children.length; index++)
+        Offstage(
+          offstage: index != widget.currentIndex,
+          child: TickerMode(
+            enabled: index == widget.currentIndex,
+            child: widget.children[index],
           ),
-      ],
-    ),
+        ),
+    ],
   );
 }
 

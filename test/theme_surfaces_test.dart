@@ -9,6 +9,7 @@ import 'package:harbor/features/ledger/presentation/cubit/ledger_cubit.dart';
 import 'package:harbor/features/settings/presentation/pages/settings_page.dart';
 import 'package:harbor/shared/widgets/edge_blur_overlay.dart';
 import 'package:harbor/shared/widgets/glass_panel.dart';
+import 'package:harbor/shared/widgets/harbor_sticky_scroll.dart';
 
 import 'support/ledger_test_support.dart';
 
@@ -45,21 +46,24 @@ void main() {
             ),
           ),
         );
+        await tester.binding.setSurfaceSize(const Size(390, 900));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
+
         await tester.pumpWidget(
           _themedShell(theme: theme, cubit: cubit, child: const TodayPage()),
         );
         await tester.pump();
 
+        expect(find.byType(HarborStickyScrollView), findsOneWidget);
         expect(find.text('Today'), findsOneWidget);
-        expect(find.text('Nothing is due in the next 14 days.'), findsOneWidget);
+        expect(find.text('Nothing scheduled'), findsOneWidget);
+        expect(find.text('All clear'), findsOneWidget);
 
-        final muted = tester.widget<Text>(
-          find.text('Nothing is due in the next 14 days.'),
-        );
+        final muted = tester.widget<Text>(find.text('Nothing scheduled'));
         final onSurface = theme.colorScheme.onSurface;
         final color = muted.style?.color;
         expect(color, isNotNull);
-        expect(color!.a, closeTo(0.7, 0.02));
+        expect(color!.a, closeTo(0.45, 0.02));
         expect(color!.r, closeTo(onSurface.r, 0.02));
       });
 

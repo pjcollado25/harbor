@@ -29,11 +29,8 @@ class HarborGlassChrome extends StatelessWidget {
   final double blurSigma;
   final double frostScale;
 
-  static ImageFilter blurFilter(double sigma) => ImageFilter.blur(
-    sigmaX: sigma,
-    sigmaY: sigma,
-    tileMode: TileMode.clamp,
-  );
+  static ImageFilter blurFilter(double sigma) =>
+      ImageFilter.blur(sigmaX: sigma, sigmaY: sigma, tileMode: TileMode.clamp);
 
   @override
   Widget build(BuildContext context) {
@@ -47,11 +44,10 @@ class HarborGlassChrome extends StatelessWidget {
     final highlight = Colors.white.withValues(alpha: dark ? .08 : .22);
 
     final border = switch (edge) {
-      HarborGlassChromeEdge.bar => softBottomFade
-          ? null
-          : Border(
-              bottom: BorderSide(color: borderColor, width: .25),
-            ),
+      HarborGlassChromeEdge.bar =>
+        softBottomFade
+            ? null
+            : Border(bottom: BorderSide(color: borderColor, width: .35)),
       HarborGlassChromeEdge.rounded => null,
     };
 
@@ -70,11 +66,7 @@ class HarborGlassChrome extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      highlight,
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.transparent, highlight, Colors.transparent],
                   ),
                 ),
               ),
@@ -98,10 +90,7 @@ class HarborGlassChrome extends StatelessWidget {
             ),
             child: Stack(
               clipBehavior: Clip.none,
-              children: [
-                ?topHighlight,
-                content,
-              ],
+              children: [?topHighlight, content],
             ),
           ),
         ),

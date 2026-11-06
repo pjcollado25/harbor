@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import '../../features/ledger/presentation/cubit/ledger_cubit.dart';
-import 'edge_blur_overlay.dart';
 import 'glass_chrome.dart';
+import 'harbor_sticky_header_surface.dart';
 
 class HarborShell extends StatefulWidget {
   const HarborShell({super.key, required this.navigationShell});
@@ -101,15 +102,21 @@ class _HarborShellState extends State<HarborShell> {
       fit: StackFit.expand,
       children: [
         _AmbientBackdrop(dark: dark),
-        Scaffold(
-          backgroundColor: Colors.transparent,
-          extendBody: true,
-          // Let each tab's scrollable content continue behind the floating
-          // navigation surface.
-          body: SafeArea(
-            top: false,
-            bottom: false,
-            child: navigationShell,
+        SoftEdgeBlur(
+          edges: [
+            HarborSoftEdgeBlur.bottomScrollEdge(
+              context,
+              height: HarborSoftEdgeBlur.bottomEdgeHeight(context),
+            ),
+          ],
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            extendBody: true,
+            body: SafeArea(
+              top: false,
+              bottom: false,
+              child: navigationShell,
+            ),
           ),
         ),
         Positioned(
@@ -125,18 +132,6 @@ class _HarborShellState extends State<HarborShell> {
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Positioned(
-                      left: -14,
-                      right: -14,
-                      bottom: 0,
-                      height: 64 + 88,
-                      child: const IgnorePointer(
-                        child: EdgeBlurOverlay(
-                          placement: EdgeBlurPlacement.bottom,
-                          blurSigma: 34,
-                        ),
-                      ),
-                    ),
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(32),
@@ -156,7 +151,7 @@ class _HarborShellState extends State<HarborShell> {
                         blurSigma: 34,
                         frostScale: 0.3,
                         child: SizedBox(
-                          height: 64,
+                          height: 56,
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final tabWidth =

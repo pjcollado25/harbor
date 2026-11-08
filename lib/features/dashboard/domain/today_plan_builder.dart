@@ -66,7 +66,7 @@ List<DayPlanItem> dayItemsFor(LedgerSnapshot snapshot, DateTime day) {
 bool dayHasItems(LedgerSnapshot snapshot, DateTime day) =>
     dayItemsFor(snapshot, day).isNotEmpty;
 
-/// Signed net for the summary total (income positive, bills negative).
+/// Income minus bills still to pay. Paid bills stay out of the total.
 int dayNetTotal(List<DayPlanItem> items) {
   var net = 0;
   for (final item in items) {
@@ -74,11 +74,57 @@ int dayNetTotal(List<DayPlanItem> items) {
       case DayPlanItemKind.income:
         net += item.amount;
       case DayPlanItemKind.scheduled:
-      case DayPlanItemKind.paid:
         net -= item.amount;
+      case DayPlanItemKind.paid:
+        break;
     }
   }
   return net;
+}
+
+/// Customer-facing line for the day. [lead] is the bill count.
+/// [detail] is what is left after income, or how short the day is.
+class DaySummary {
+  const DaySummary({required this.lead, this.detail});
+
+  final String lead;
+  final String? detail;
+}
+
+DaySummary daySummary(List<DayPlanItem> items, String currencyCode) {
+  if (items.isEmpty) {
+    return const DaySummary(lead: 'Nothing scheduled');
+  }
+
+  final openBills = items
+      .where((item) => item.kind == DayPlanItemKind.scheduled)
+      .length;
+  final hasIncome = items.any((item) => item.kind == DayPlanItemKind.income);
+  final lead = openBills == 0
+      ? 'No bills still to pay'
+      : '$openBills ${openBills == 1 ? 'bill' : 'bills'} still to pay';
+
+  if (!hasIncome && openBills == 0) {
+    return DaySummary(lead: lead);
+  }
+
+  final net = dayNetTotal(items);
+  if (net < 0) {
+    return DaySummary(
+      lead: lead,
+      detail: '−${formatMoney(net.abs(), currencyCode)} short',
+    );
+  }
+  if (openBills == 0) {
+    return DaySummary(
+      lead: lead,
+      detail: '${formatMoney(net, currencyCode)} coming in',
+    );
+  }
+  return DaySummary(
+    lead: lead,
+    detail: '${formatMoney(net, currencyCode)} left after income',
+  );
 }
 
 typedef UpcomingPlanEntry = ({DateTime date, DayPlanItem item});

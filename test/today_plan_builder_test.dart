@@ -76,7 +76,7 @@ void main() {
   });
 
   group('dayNetTotal', () {
-    test('subtracts bills and adds income', () {
+    test('subtracts open bills and adds income', () {
       final total = dayNetTotal(const [
         DayPlanItem(
           id: '1',
@@ -90,8 +90,78 @@ void main() {
           amount: 1500,
           kind: DayPlanItemKind.income,
         ),
+        DayPlanItem(
+          id: '3',
+          name: 'Already paid',
+          amount: 400,
+          kind: DayPlanItemKind.paid,
+        ),
       ]);
       expect(total, 500);
+    });
+  });
+
+  group('daySummary', () {
+    test('says what is left after income', () {
+      final summary = daySummary(const [
+        DayPlanItem(
+          id: '1',
+          name: 'Rent',
+          amount: 1000,
+          kind: DayPlanItemKind.scheduled,
+        ),
+        DayPlanItem(
+          id: '2',
+          name: 'Pay',
+          amount: 1198,
+          kind: DayPlanItemKind.income,
+        ),
+        DayPlanItem(
+          id: '3',
+          name: 'Already paid',
+          amount: 400,
+          kind: DayPlanItemKind.paid,
+        ),
+      ], 'PHP');
+
+      expect(summary.lead, '1 bill still to pay');
+      expect(summary.detail, '₱198 left after income');
+    });
+
+    test('shows a minus when income does not cover open bills', () {
+      final summary = daySummary(const [
+        DayPlanItem(
+          id: '1',
+          name: 'Rent',
+          amount: 1000,
+          kind: DayPlanItemKind.scheduled,
+        ),
+        DayPlanItem(
+          id: '2',
+          name: 'Food',
+          amount: 200,
+          kind: DayPlanItemKind.scheduled,
+        ),
+      ], 'PHP');
+
+      expect(summary.lead, '2 bills still to pay');
+      expect(summary.detail, '−₱1,200 short');
+    });
+
+    test('names an empty day and a day that is only income', () {
+      expect(daySummary(const [], 'PHP').lead, 'Nothing scheduled');
+      expect(daySummary(const [], 'PHP').detail, isNull);
+
+      final incomeOnly = daySummary(const [
+        DayPlanItem(
+          id: '1',
+          name: 'Pay',
+          amount: 8580,
+          kind: DayPlanItemKind.income,
+        ),
+      ], 'PHP');
+      expect(incomeOnly.lead, 'No bills still to pay');
+      expect(incomeOnly.detail, '₱8,580 coming in');
     });
   });
 }

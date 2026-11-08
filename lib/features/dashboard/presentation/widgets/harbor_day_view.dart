@@ -348,34 +348,24 @@ class _SummaryLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return Text(
-        'Nothing scheduled',
-        style: TextStyle(fontSize: 14, color: tertiary),
-      );
-    }
+    final summary = daySummary(items, currencyCode);
+    final detailStyle = TextStyle(
+      fontWeight: FontWeight.w600,
+      color: Theme.of(context).colorScheme.onSurface,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
 
-    final net = dayNetTotal(items);
-    final totalText = _formatSignedMoney(net, currencyCode);
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          '${items.length} scheduled',
-          style: TextStyle(fontSize: 14, color: tertiary),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          totalText,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w500,
-            fontFeatures: [FontFeature.tabularFigures()],
-          ),
-        ),
-      ],
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: summary.lead),
+          if (summary.detail != null) ...[
+            const TextSpan(text: ' · '),
+            TextSpan(text: summary.detail, style: detailStyle),
+          ],
+        ],
+      ),
+      style: TextStyle(fontSize: 15, height: 1.35, color: tertiary),
     );
   }
 }
@@ -718,8 +708,3 @@ class HarborAddBillButton extends StatelessWidget {
   }
 }
 
-String _formatSignedMoney(int net, String currencyCode) {
-  if (net == 0) return formatMoney(0, currencyCode);
-  final base = formatMoney(net.abs(), currencyCode);
-  return net > 0 ? '+$base' : base;
-}

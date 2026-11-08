@@ -92,7 +92,8 @@ void main() {
       ),
     );
 
-    expect(find.text('1 scheduled'), findsOneWidget);
+    expect(find.textContaining('1 bill still to pay'), findsOneWidget);
+    expect(find.textContaining('−₱94 short'), findsOneWidget);
     expect(find.text('Electric'), findsOneWidget);
     expect(find.text('All clear'), findsNothing);
   });

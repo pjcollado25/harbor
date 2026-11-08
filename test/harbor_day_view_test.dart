@@ -6,6 +6,25 @@ import 'package:harbor/features/dashboard/domain/today_plan_builder.dart';
 import 'package:harbor/features/dashboard/presentation/widgets/harbor_day_view.dart';
 
 void main() {
+  testWidgets('reserves space above the floating add button', (tester) async {
+    late double padding;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(padding: EdgeInsets.only(bottom: 34)),
+          child: Builder(
+            builder: (context) {
+              padding = dayListBottomPadding(context);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(padding, 34 + dayFabBottomGap + dayFabHeight + 28);
+  });
+
   testWidgets('shows All clear on an empty day with coming up', (tester) async {
     await tester.binding.setSurfaceSize(const Size(390, 900));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -96,6 +115,8 @@ void main() {
     expect(find.textContaining('−₱94 short'), findsOneWidget);
     expect(find.text('Electric'), findsOneWidget);
     expect(find.text('All clear'), findsNothing);
+    expect(find.byIcon(Icons.circle_outlined), findsNothing);
+    expect(find.byIcon(Icons.check_circle), findsNothing);
   });
 
   testWidgets('highlights days that have scheduled items in the week strip', (

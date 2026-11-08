@@ -52,7 +52,7 @@ class _TodayPageState extends State<TodayPage> {
               expandedTitleSize: 20,
               collapsedTitleSize: 16,
               leading: const HarborBrandRow(),
-              bottomPadding: 168,
+              bottomPadding: dayListBottomPadding(context),
               children: [
                 HarborDayView(
                   selectedDay: _selectedDay,
@@ -73,7 +73,7 @@ class _TodayPageState extends State<TodayPage> {
             ),
             Positioned(
               right: 20,
-              bottom: MediaQuery.paddingOf(context).bottom + 78,
+              bottom: MediaQuery.paddingOf(context).bottom + dayFabBottomGap,
               child: HarborAddBillButton(
                 expanded: false,
                 onPressed: () => context.push('/bills/new'),

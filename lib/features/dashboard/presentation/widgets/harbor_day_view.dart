@@ -405,6 +405,33 @@ class _DayTimeline extends StatelessWidget {
   }
 }
 
+/// Status only. A ring here looked like a checkbox for marking a bill paid.
+class _DayStatusMark extends StatelessWidget {
+  const _DayStatusMark({required this.paid, required this.color});
+
+  final bool paid;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 18,
+      height: 18,
+      child: Center(
+        child: paid
+            ? Icon(Icons.check_rounded, size: 16, color: color)
+            : DecoratedBox(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+                child: const SizedBox.square(dimension: 6),
+              ),
+      ),
+    );
+  }
+}
+
 class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
     required this.item,
@@ -432,10 +459,9 @@ class _TimelineRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 13),
         child: Row(
           children: [
-            Icon(
-              paid ? Icons.check_circle : Icons.circle_outlined,
-              size: 18,
-              color: paid ? harborCalmGreen(context) : tertiary,
+            _DayStatusMark(
+              paid: paid,
+              color: paid || income ? harborCalmGreen(context) : tertiary,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -660,6 +686,20 @@ class _UpcomingRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Space between the home indicator and the floating Add button.
+const dayFabBottomGap = 78.0;
+
+/// Reserved height of [HarborAddBillButton] when it floats over Today.
+const dayFabHeight = 48.0;
+
+/// List padding that keeps the last row above the floating button and tab bar.
+double dayListBottomPadding(BuildContext context) {
+  return MediaQuery.paddingOf(context).bottom +
+      dayFabBottomGap +
+      dayFabHeight +
+      28;
 }
 
 class HarborAddBillButton extends StatelessWidget {

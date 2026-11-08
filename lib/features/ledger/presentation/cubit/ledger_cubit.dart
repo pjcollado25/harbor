@@ -188,7 +188,7 @@ class LedgerCubit extends Cubit<LedgerState> {
     emit(state.copyWith(isSaving: true));
     return _finish(
       await _clearLocalData(),
-      'All local Harbor data was deleted',
+      'All local Drop27Payment data was deleted',
     );
   }
 

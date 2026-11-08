@@ -18,7 +18,7 @@ class HarborApp extends StatelessWidget {
     value: ledgerCubit,
     child: BlocBuilder<LedgerCubit, LedgerState>(
       builder: (context, state) => MaterialApp.router(
-        title: 'Harbor',
+        title: 'Drop27Payment',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light(),
         darkTheme: AppTheme.dark(),

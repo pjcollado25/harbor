@@ -78,7 +78,7 @@ class _BillsPageState extends State<BillsPage> {
                   ? 'No bills yet'
                   : 'No matching bills',
               body: snapshot.bills.isEmpty
-                  ? 'Add the obligations you want to keep track of. Harbor stores them only on this device.'
+                  ? 'Add the obligations you want to keep track of. Drop27Payment stores them only on this device.'
                   : 'Try a different search or filter.',
               actionLabel: snapshot.bills.isEmpty ? 'Add a bill' : null,
               onAction: snapshot.bills.isEmpty

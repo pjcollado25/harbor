@@ -91,7 +91,7 @@ class HiveLedgerRepository implements LedgerRepository {
     } catch (error) {
       return Failed<T>(
         AppFailure(
-          'Harbor could not save your local data. Please try again.',
+          'Drop27Payment could not save your local data. Please try again.',
           cause: error,
         ),
       );

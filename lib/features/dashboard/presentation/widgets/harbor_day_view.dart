@@ -159,11 +159,11 @@ class _BrandRow extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'HARBOR',
+            'DROP27PAYMENT',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              letterSpacing: 3,
+              letterSpacing: 0.8,
               color: color,
             ),
           ),

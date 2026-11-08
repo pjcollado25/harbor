@@ -119,7 +119,7 @@ class _PaymentFormPageState extends State<PaymentFormPage> {
               ),
               const SizedBox(height: 14),
               Text(
-                'This payment is recorded from your entry. Harbor does not connect to your bank.',
+                'This payment is recorded from your entry. Drop27Payment does not connect to your bank.',
                 style: context.harborMutedText(alpha: 0.6, fontSize: 12),
               ),
               const SizedBox(height: 22),

@@ -191,7 +191,7 @@ class BillDetailPage extends StatelessWidget {
               ),
             const SizedBox(height: 10),
             Text(
-              'You entered these details. Harbor has not verified them with a bank.',
+              'You entered these details. Drop27Payment has not verified them with a bank.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(
                   context,

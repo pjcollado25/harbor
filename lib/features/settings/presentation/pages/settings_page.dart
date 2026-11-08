@@ -28,7 +28,7 @@ class SettingsPage extends StatelessWidget {
       final prefs = state.snapshot.preferences;
       return HarborStickyScrollView(
         title: 'Settings',
-        subtitle: 'Manage how Harbor looks and works',
+        subtitle: 'Manage how Drop27Payment looks and works',
         children: [
           SectionLabel('Appearance'),
           GlassPanel(
@@ -39,7 +39,7 @@ class SettingsPage extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   secondary: const Icon(Icons.dark_mode_outlined),
                   title: const Text('Dark mode'),
-                  subtitle: const Text('Use Harbor with a dark appearance'),
+                  subtitle: const Text('Use Drop27Payment with a dark appearance'),
                   value: prefs.darkMode,
                   onChanged: (value) => context
                       .read<LedgerCubit>()
@@ -74,7 +74,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Harbor can remind you before bills are due. Reminders stay on this device.',
+                  'Drop27Payment can remind you before bills are due. Reminders stay on this device.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(
                       context,
@@ -142,7 +142,7 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 const Text(
-                  'Your bills, payments, and expected income are saved on this device. Harbor never connects to your bank.',
+                  'Your bills, payments, and expected income are saved on this device. Drop27Payment never connects to your bank.',
                   style: TextStyle(fontSize: 12, height: 1.45),
                 ),
                 const SizedBox(height: 13),
@@ -178,7 +178,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'Harbor · Your plan, your pace',
+              'Drop27Payment · Bills when sahod moves',
               style: context.harborMutedText(alpha: 0.54, fontSize: 12),
             ),
           ),
@@ -285,7 +285,7 @@ class SettingsPage extends StatelessWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Clear all Harbor data?'),
+        title: const Text('Clear all Drop27Payment data?'),
         content: const Text(
           'This removes your bills, payments, expected income, and settings from this device. You can’t undo this.',
         ),

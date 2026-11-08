@@ -32,7 +32,7 @@ class _HarborSplashScreenState extends State<HarborSplashScreen>
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       body: Semantics(
-        label: 'Loading Harbor',
+        label: 'Loading Drop27Payment',
         child: SizedBox.expand(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -64,7 +64,7 @@ class _HarborSplashScreenState extends State<HarborSplashScreen>
               ),
               const SizedBox(height: 22),
               Text(
-                'Harbor',
+                'Drop27Payment',
                 style: theme.textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   letterSpacing: -.5,
@@ -72,7 +72,7 @@ class _HarborSplashScreenState extends State<HarborSplashScreen>
               ),
               const SizedBox(height: 7),
               Text(
-                'Your plan, your pace',
+                'Bills when sahod moves',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colors.onSurface.withValues(alpha: .62),
                 ),

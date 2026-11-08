@@ -50,7 +50,7 @@ class _HarborShellState extends State<HarborShell> {
         icon: const Icon(Icons.notifications_active_outlined),
         title: const Text('Turn on bill reminders?'),
         content: const Text(
-          'Allow Harbor to notify you before a bill is due. Your reminders stay on this device.',
+          'Allow Drop27Payment to notify you before a bill is due. Your reminders stay on this device.',
         ),
         actions: [
           TextButton(
@@ -75,7 +75,7 @@ class _HarborShellState extends State<HarborShell> {
         icon: const Icon(Icons.notifications_off_outlined),
         title: const Text('Notifications are turned off'),
         content: const Text(
-          'You can still use Harbor. Turn on notifications in your device settings to receive bill reminders.',
+          'You can still use Drop27Payment. Turn on notifications in your device settings to receive bill reminders.',
         ),
         actions: [
           TextButton(

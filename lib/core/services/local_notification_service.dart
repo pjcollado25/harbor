@@ -61,13 +61,13 @@ class LocalNotificationService implements ReminderScheduler {
           ? const Success(null)
           : const Failed(
               AppFailure(
-                'Notifications are turned off for Harbor. You can enable them in device Settings.',
+                'Notifications are turned off for Drop27Payment. You can enable them in device Settings.',
               ),
             );
     } catch (error) {
       return Failed(
         AppFailure(
-          'Harbor could not request notification permission.',
+          'Drop27Payment could not request notification permission.',
           cause: error,
         ),
       );
@@ -166,7 +166,7 @@ class LocalNotificationService implements ReminderScheduler {
             ? 'A bill is coming up'
             : '${bill.name} is coming up',
         body: hideDetails
-            ? 'Open Harbor to review your upcoming bill.'
+            ? 'Open Drop27Payment to review your upcoming bill.'
             : 'Due ${bill.dueDate.month}/${bill.dueDate.day}. You entered this reminder.',
         scheduledDate: localDate,
         notificationDetails: details,
@@ -192,7 +192,10 @@ class LocalNotificationService implements ReminderScheduler {
       return const Success(null);
     } catch (error) {
       return Failed(
-        AppFailure('Harbor could not cancel the bill reminder.', cause: error),
+        AppFailure(
+          'Drop27Payment could not cancel the bill reminder.',
+          cause: error,
+        ),
       );
     }
   }

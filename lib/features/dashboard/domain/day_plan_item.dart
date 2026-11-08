@@ -14,7 +14,7 @@ class DayPlanItem {
   final DayPlanItemKind kind;
 
   String? get tagLabel => switch (kind) {
-        DayPlanItemKind.paid => 'paid',
+        DayPlanItemKind.paid => 'Paid',
         DayPlanItemKind.income => 'incoming',
         DayPlanItemKind.scheduled => null,
       };

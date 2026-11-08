@@ -8,6 +8,7 @@ import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
+import '../../domain/bill_money_status.dart';
 
 class BillsPage extends StatefulWidget {
   const BillsPage({super.key});
@@ -24,14 +25,7 @@ class _BillsPageState extends State<BillsPage> {
     builder: (context, state) {
       final snapshot = state.snapshot;
       final bills = snapshot.bills.where((bill) {
-        final paid = snapshot.payments
-            .where((payment) => payment.billId == bill.id)
-            .fold<int>(0, (sum, payment) => sum + payment.amount);
-        final status = paid >= bill.amount
-            ? 'Paid'
-            : bill.dueDate.isBefore(dateOnly(DateTime.now()))
-            ? 'Overdue'
-            : 'Upcoming';
+        final status = _statusFor(snapshot, bill).label;
         return (_filter == 'All' ||
                 (_filter == 'Open' ? status != 'Paid' : status == _filter)) &&
             bill.name.toLowerCase().contains(_query.toLowerCase());
@@ -89,9 +83,7 @@ class _BillsPageState extends State<BillsPage> {
             ...bills.map(
               (bill) => _BillListItem(
                 bill: bill,
-                paid: snapshot.payments
-                    .where((payment) => payment.billId == bill.id)
-                    .fold<int>(0, (sum, payment) => sum + payment.amount),
+                status: _statusFor(snapshot, bill),
                 currency: snapshot.preferences.currencyCode,
               ),
             ),
@@ -99,20 +91,26 @@ class _BillsPageState extends State<BillsPage> {
       );
     },
   );
+
+  BillMoneyStatus _statusFor(LedgerSnapshot snapshot, Bill bill) {
+    final paid = snapshot.payments
+        .where((payment) => payment.billId == bill.id)
+        .fold<int>(0, (sum, payment) => sum + payment.amount);
+    return billMoneyStatus(bill, paid, DateTime.now());
+  }
 }
 
 class _BillListItem extends StatelessWidget {
   const _BillListItem({
     required this.bill,
-    required this.paid,
+    required this.status,
     required this.currency,
   });
   final Bill bill;
-  final int paid;
+  final BillMoneyStatus status;
   final String currency;
   @override
   Widget build(BuildContext context) {
-    final remaining = (bill.amount - paid).clamp(0, bill.amount).toInt();
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
       child: InkWell(
@@ -167,7 +165,7 @@ class _BillListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      formatMoney(remaining, currency),
+                      formatMoney(status.displayAmount, currency),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.end,
@@ -175,14 +173,10 @@ class _BillListItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      remaining == 0
-                          ? 'Paid'
-                          : paid > 0
-                          ? 'Part paid'
-                          : 'Due',
+                      status.label,
                       style: TextStyle(
                         fontSize: 11,
-                        color: remaining == 0
+                        color: status.isPaid
                             ? Theme.of(context).colorScheme.primary
                             : Theme.of(
                                 context,

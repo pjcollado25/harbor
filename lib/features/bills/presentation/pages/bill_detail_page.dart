@@ -7,6 +7,7 @@ import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
+import '../../domain/bill_money_status.dart';
 
 class BillDetailPage extends StatelessWidget {
   const BillDetailPage({super.key, required this.billId});
@@ -31,7 +32,8 @@ class BillDetailPage extends StatelessWidget {
         0,
         (sum, payment) => sum + payment.amount,
       );
-      final remaining = (bill.amount - paid).clamp(0, bill.amount).toInt();
+      final money = billMoneyStatus(bill, paid, DateTime.now());
+      final remaining = money.remaining;
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -80,7 +82,7 @@ class BillDetailPage extends StatelessWidget {
                   const SizedBox(height: 18),
                   Text(
                     formatMoney(
-                      remaining,
+                      money.displayAmount,
                       state.snapshot.preferences.currencyCode,
                     ),
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -97,20 +99,14 @@ class BillDetailPage extends StatelessWidget {
                       ).colorScheme.onSurface.withValues(alpha: .6),
                     ),
                   ),
-                  if (paid > 0) ...[
+                  if (paid > 0 && remaining > 0) ...[
                     const SizedBox(height: 14),
                     Text(
                       '${formatMoney(paid, state.snapshot.preferences.currencyCode)} recorded toward this bill',
                     ),
                   ],
                   const SizedBox(height: 14),
-                  StatusTag(
-                    remaining == 0
-                        ? 'Paid by your entry'
-                        : bill.dueDate.isBefore(dateOnly(DateTime.now()))
-                        ? 'Overdue'
-                        : 'Upcoming',
-                  ),
+                  StatusTag(money.label),
                 ],
               ),
             ),

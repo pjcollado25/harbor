@@ -7,6 +7,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
+import '../../../bills/domain/bill_money_status.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -30,15 +31,9 @@ class _PlanPageState extends State<PlanPage> {
         ...snapshot.bills
             .where((bill) => bill.isActive)
             .map(
-              (bill) => _PlanEvent(
-                date: bill.dueDate,
-                title: bill.name,
-                subtitle:
-                    '${bill.isEstimate ? 'Estimate' : 'Bill'} · ${bill.frequency.name}',
-                amount: _remaining(snapshot, bill),
-                isIncome: false,
-                onTap: () => context.push('/bill/${bill.id}'),
-              ),
+              (bill) => _planBill(snapshot, bill, () {
+                context.push('/bill/${bill.id}');
+              }),
             ),
         ...snapshot.incomes.map(
           (income) => _PlanEvent(
@@ -442,11 +437,25 @@ class _PlanPageState extends State<PlanPage> {
     }
   }
 
-  static int _remaining(LedgerSnapshot snapshot, Bill bill) {
+  static _PlanEvent _planBill(
+    LedgerSnapshot snapshot,
+    Bill bill,
+    VoidCallback onTap,
+  ) {
     final paid = snapshot.payments
         .where((payment) => payment.billId == bill.id)
         .fold<int>(0, (sum, payment) => sum + payment.amount);
-    return (bill.amount - paid).clamp(0, bill.amount).toInt();
+    final money = billMoneyStatus(bill, paid, DateTime.now());
+    return _PlanEvent(
+      date: bill.dueDate,
+      title: bill.name,
+      subtitle: money.isPaid
+          ? 'Paid · ${bill.frequency.name}'
+          : '${bill.isEstimate ? 'Estimate' : 'Bill'} · ${bill.frequency.name}',
+      amount: money.displayAmount,
+      isIncome: false,
+      onTap: onTap,
+    );
   }
 
   static String _incomeStatus(IncomeStatus value) => switch (value) {

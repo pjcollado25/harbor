@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
+import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -57,6 +58,7 @@ class _BillFormPageState extends State<BillFormPage> {
     ),
     body: Form(
       key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
         children: [
@@ -84,10 +86,7 @@ class _BillFormPageState extends State<BillFormPage> {
           TextFormField(
             controller: _amount,
             keyboardType: const TextInputType.numberWithOptions(decimal: false),
-            decoration: const InputDecoration(
-              labelText: 'Amount',
-              prefixText: '₱ ',
-            ),
+            decoration: moneyAmountDecoration,
             validator: (value) {
               final amount = int.tryParse(value ?? '');
               return amount == null || amount <= 0

@@ -158,13 +158,16 @@ class LedgerCubit extends Cubit<LedgerState> {
     return _finish(await _saveFunds(snapshot), 'Starting funds updated');
   }
 
-  Future<bool> updatePreferences(UserPreferences preferences) async {
+  Future<bool> updatePreferences(
+    UserPreferences preferences, {
+    bool announce = true,
+  }) async {
     final privacyChanged =
         state.snapshot.preferences.hideReminderDetails !=
         preferences.hideReminderDetails;
     emit(state.copyWith(isSaving: true));
     final result = await _savePreferences(preferences);
-    final saved = await _finish(result, 'Settings saved');
+    final saved = await _finish(result, announce ? 'Settings saved' : null);
     if (saved && privacyChanged) {
       for (final bill in state.snapshot.bills) {
         await _scheduleReminder(
@@ -217,7 +220,7 @@ class LedgerCubit extends Cubit<LedgerState> {
     ),
   );
 
-  Future<bool> _finish(Result<void> result, String message) async {
+  Future<bool> _finish(Result<void> result, String? message) async {
     if (result case Failed<void>(:final failure)) {
       emit(state.copyWith(isSaving: false, failure: failure.message));
       return false;
@@ -225,7 +228,7 @@ class LedgerCubit extends Cubit<LedgerState> {
     return _reloadAfterMutation(message);
   }
 
-  Future<bool> _reloadAfterMutation(String message) async {
+  Future<bool> _reloadAfterMutation(String? message) async {
     final loaded = await _loadLedger();
     switch (loaded) {
       case Success<LedgerSnapshot>(:final value):

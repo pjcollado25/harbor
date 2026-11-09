@@ -21,7 +21,7 @@ class _PlanPageState extends State<PlanPage> {
   bool _monthView = false;
   DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   DateTime _selectedDay = dateOnly(DateTime.now());
-  IncomeEvent? _delayedOriginal;
+  IncomeEvent? _previewIncome;
 
   @override
   Widget build(BuildContext context) => BlocBuilder<LedgerCubit, LedgerState>(
@@ -30,6 +30,12 @@ class _PlanPageState extends State<PlanPage> {
       final events = <_PlanEvent>[
         ...snapshot.bills
             .where((bill) => bill.isActive)
+            .where((bill) {
+              final paid = snapshot.payments
+                  .where((payment) => payment.billId == bill.id)
+                  .fold<int>(0, (sum, payment) => sum + payment.amount);
+              return !billMoneyStatus(bill, paid, DateTime.now()).isPaid;
+            })
             .map(
               (bill) => _planBill(snapshot, bill, () {
                 context.push('/bill/${bill.id}');
@@ -37,7 +43,7 @@ class _PlanPageState extends State<PlanPage> {
             ),
         ...snapshot.incomes.map(
           (income) => _PlanEvent(
-            date: income.expectedDate,
+            date: _shownIncomeDate(income),
             title: income.source,
             subtitle: _incomeStatus(income.status),
             amount: income.amount,
@@ -59,13 +65,19 @@ class _PlanPageState extends State<PlanPage> {
               .where((income) => income.status == IncomeStatus.expected)
               .toList()
             ..sort((a, b) => a.expectedDate.compareTo(b.expectedDate));
-      final scenarioIncome =
-          _delayedOriginal ??
-          (expectedIncomes.isEmpty ? null : expectedIncomes.first);
-      final changed = _delayedOriginal != null;
+      final scenarioIncome = expectedIncomes.isEmpty
+          ? null
+          : expectedIncomes.firstWhere(
+              (income) => income.id == _previewIncome?.id,
+              orElse: () => expectedIncomes.first,
+            );
+      final previewing = _previewIncome?.id == scenarioIncome?.id;
+      final shownScenarioDate = scenarioIncome == null
+          ? null
+          : _shownIncomeDate(scenarioIncome);
       return HarborStickyScrollView(
         title: 'Plan',
-        subtitle: 'Known bills and income you entered',
+        subtitle: 'Bills and income still ahead',
         trailing: IconButton.filledTonal(
           onPressed: () => context.push('/income/new'),
           icon: const Icon(Icons.add_rounded),
@@ -114,6 +126,7 @@ class _PlanPageState extends State<PlanPage> {
                 (event) => _EventTile(
                   event: event,
                   currency: snapshot.preferences.currencyCode,
+                  showDate: false,
                 ),
               ),
           ] else if (events.isEmpty)
@@ -179,7 +192,7 @@ class _PlanPageState extends State<PlanPage> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    '${scenarioIncome.source} · ${formatDate(scenarioIncome.expectedDate, year: true)}',
+                    '${scenarioIncome.source} · ${formatDate(shownScenarioDate!, year: true)}',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 5),
@@ -196,49 +209,43 @@ class _PlanPageState extends State<PlanPage> {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: changed
-                              ? () async {
-                                  final original = _delayedOriginal!;
-                                  final current = snapshot.incomes.where(
-                                    (item) => item.id == original.id,
-                                  );
-                                  if (current.isNotEmpty)
-                                    await context
-                                        .read<LedgerCubit>()
-                                        .saveIncome(original);
-                                  if (mounted)
-                                    setState(() => _delayedOriginal = null);
-                                }
+                          onPressed: previewing
+                              ? () => setState(() => _previewIncome = null)
                               : null,
-                          child: const Text('Undo change'),
+                          child: const Text('Undo'),
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: FilledButton(
                           onPressed:
-                              !changed &&
-                                  scenarioIncome.status == IncomeStatus.expected
+                              scenarioIncome.status != IncomeStatus.expected
+                              ? null
+                              : previewing
                               ? () async {
-                                  _delayedOriginal = scenarioIncome;
                                   final ok = await context
                                       .read<LedgerCubit>()
                                       .delayIncome(scenarioIncome);
-                                  if (!ok && mounted)
-                                    setState(() => _delayedOriginal = null);
+                                  if (ok && mounted) {
+                                    setState(() => _previewIncome = null);
+                                  }
                                 }
-                              : null,
+                              : () => setState(
+                                  () => _previewIncome = scenarioIncome,
+                                ),
                           child: Text(
-                            changed ? 'Moved 5 days' : 'Move 5 days later',
+                            previewing ? 'Save new date' : 'Move 5 days later',
+                            maxLines: 1,
+                            softWrap: false,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  if (changed) ...[
+                  if (previewing) ...[
                     const SizedBox(height: 12),
                     const Text(
-                      'Your saved expected date changed. No bill date was changed.',
+                      'This is a preview. Save it to keep the new date.',
                       style: TextStyle(fontSize: 12),
                     ),
                   ],
@@ -458,6 +465,13 @@ class _PlanPageState extends State<PlanPage> {
     );
   }
 
+  DateTime _shownIncomeDate(IncomeEvent income) {
+    if (_previewIncome?.id == income.id) {
+      return income.expectedDate.add(const Duration(days: 5));
+    }
+    return income.expectedDate;
+  }
+
   static String _incomeStatus(IncomeStatus value) => switch (value) {
     IncomeStatus.expected => 'Expected · entered by you',
     IncomeStatus.clientSent => 'Client says sent',
@@ -483,71 +497,84 @@ class _PlanEvent {
 }
 
 class _EventTile extends StatelessWidget {
-  const _EventTile({required this.event, required this.currency});
+  const _EventTile({
+    required this.event,
+    required this.currency,
+    this.showDate = true,
+  });
   final _PlanEvent event;
   final String currency;
+  final bool showDate;
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: InkWell(
-      onTap: event.onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: GlassPanel(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        radius: 18,
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: .13),
-                borderRadius: BorderRadius.circular(14),
+    child: Semantics(
+      button: true,
+      label:
+          '${event.title}. ${showDate ? '${formatDate(event.date)}. ' : ''}${event.subtitle}. ${formatMoney(event.amount, currency)}',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: event.onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: GlassPanel(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          radius: 18,
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: .13),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  event.isIncome
+                      ? Icons.south_west_rounded
+                      : Icons.north_east_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                event.isIncome
-                    ? Icons.south_west_rounded
-                    : Icons.north_east_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 11),
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.title,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${formatDate(event.date)} · ${event.subtitle}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: .6),
+              const SizedBox(width: 11),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.title,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 3),
+                    Text(
+                      showDate
+                          ? '${formatDate(event.date)} · ${event.subtitle}'
+                          : event.subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: .6),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Flexible(
-              flex: 2,
-              child: Text(
-                formatMoney(event.amount, currency),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.end,
-                style: const TextStyle(fontWeight: FontWeight.w700),
+              Flexible(
+                flex: 2,
+                child: Text(
+                  formatMoney(event.amount, currency),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     ),

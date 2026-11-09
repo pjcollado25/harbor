@@ -69,7 +69,7 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: lightCanvas,
       canvasColor: lightCanvas,
-      dividerColor: const Color(0xFFD2DEEA),
+      dividerColor: const Color(0xFFB7C6D6),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         foregroundColor: Color(0xFF1C2836),

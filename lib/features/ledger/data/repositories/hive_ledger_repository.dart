@@ -35,6 +35,8 @@ class HiveLedgerRepository implements LedgerRepository {
         darkMode: settings['darkMode'] as bool? ?? true,
         hideReminderDetails: settings['hideReminderDetails'] as bool? ?? true,
         currencyCode: settings['currencyCode'] as String? ?? 'PHP',
+        reminderPromptDismissed:
+            settings['reminderPromptDismissed'] as bool? ?? false,
       ),
       bufferGoal: settings['bufferGoal'] as int?,
     );
@@ -71,6 +73,7 @@ class HiveLedgerRepository implements LedgerRepository {
       'darkMode': preferences.darkMode,
       'hideReminderDetails': preferences.hideReminderDetails,
       'currencyCode': preferences.currencyCode,
+      'reminderPromptDismissed': preferences.reminderPromptDismissed,
     }),
   );
   @override

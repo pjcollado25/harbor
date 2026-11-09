@@ -133,22 +133,32 @@ class UserPreferences extends Equatable {
     this.darkMode = true,
     this.hideReminderDetails = true,
     this.currencyCode = 'PHP',
+    this.reminderPromptDismissed = false,
   });
   final bool darkMode;
   final bool hideReminderDetails;
   final String currencyCode;
+  final bool reminderPromptDismissed;
 
   UserPreferences copyWith({
     bool? darkMode,
     bool? hideReminderDetails,
     String? currencyCode,
+    bool? reminderPromptDismissed,
   }) => UserPreferences(
     darkMode: darkMode ?? this.darkMode,
     hideReminderDetails: hideReminderDetails ?? this.hideReminderDetails,
     currencyCode: currencyCode ?? this.currencyCode,
+    reminderPromptDismissed:
+        reminderPromptDismissed ?? this.reminderPromptDismissed,
   );
   @override
-  List<Object?> get props => [darkMode, hideReminderDetails, currencyCode];
+  List<Object?> get props => [
+    darkMode,
+    hideReminderDetails,
+    currencyCode,
+    reminderPromptDismissed,
+  ];
 }
 
 class LedgerSnapshot extends Equatable {

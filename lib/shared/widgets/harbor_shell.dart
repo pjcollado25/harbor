@@ -37,10 +37,13 @@ class _HarborShellState extends State<HarborShell> {
   Future<void> _maybePromptForNotifications() async {
     if (_notificationPromptStarted) return;
     _notificationPromptStarted = true;
-    await Future<void>.delayed(const Duration(milliseconds: 280));
+    await Future<void>.delayed(const Duration(milliseconds: 900));
     if (!mounted) return;
 
     final ledgerCubit = context.read<LedgerCubit>();
+    final preferences = ledgerCubit.state.snapshot.preferences;
+    if (preferences.reminderPromptDismissed) return;
+    if (ledgerCubit.state.snapshot.bills.isEmpty) return;
     final enabled = await ledgerCubit.checkReminderPermission();
     if (!mounted || enabled) return;
 
@@ -64,7 +67,16 @@ class _HarborShellState extends State<HarborShell> {
         ],
       ),
     );
-    if (shouldRequest != true || !mounted) return;
+    if (!mounted) return;
+    if (shouldRequest != true) {
+      await ledgerCubit.updatePreferences(
+        ledgerCubit.state.snapshot.preferences.copyWith(
+          reminderPromptDismissed: true,
+        ),
+        announce: false,
+      );
+      return;
+    }
 
     final granted = await ledgerCubit.requestReminderPermission();
     if (!mounted || granted) return;
@@ -112,11 +124,7 @@ class _HarborShellState extends State<HarborShell> {
           child: Scaffold(
             backgroundColor: Colors.transparent,
             extendBody: true,
-            body: SafeArea(
-              top: false,
-              bottom: false,
-              child: navigationShell,
-            ),
+            body: SafeArea(top: false, bottom: false, child: navigationShell),
           ),
         ),
         Positioned(
@@ -160,9 +168,7 @@ class _HarborShellState extends State<HarborShell> {
                               return Stack(
                                 children: [
                                   AnimatedPositioned(
-                                    duration: const Duration(
-                                      milliseconds: 280,
-                                    ),
+                                    duration: const Duration(milliseconds: 280),
                                     curve: Curves.easeInOutCubic,
                                     top: 6,
                                     bottom: 6,
@@ -216,17 +222,16 @@ class _HarborShellState extends State<HarborShell> {
                                             destination: HarborShell
                                                 ._destinations[index],
                                             selected:
-                                                navigationShell
-                                                    .currentIndex ==
+                                                navigationShell.currentIndex ==
                                                 index,
                                             onTap: () =>
                                                 navigationShell.goBranch(
-                                              index,
-                                              initialLocation:
-                                                  index ==
-                                                  navigationShell
-                                                      .currentIndex,
-                                            ),
+                                                  index,
+                                                  initialLocation:
+                                                      index ==
+                                                      navigationShell
+                                                          .currentIndex,
+                                                ),
                                           ),
                                         ),
                                     ],
@@ -235,9 +240,9 @@ class _HarborShellState extends State<HarborShell> {
                               );
                             },
                           ),
+                        ),
                       ),
                     ),
-                  ),
                   ],
                 ),
               ),
@@ -281,6 +286,7 @@ class _TabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Tooltip(
     message: destination.label,
+    excludeFromSemantics: true,
     child: Semantics(
       label: destination.label,
       button: true,

@@ -72,7 +72,7 @@ class _HarborSplashScreenState extends State<HarborSplashScreen>
               ),
               const SizedBox(height: 7),
               Text(
-                'Bills when sahod moves',
+                'Your bills stay on this device',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: colors.onSurface.withValues(alpha: .62),
                 ),

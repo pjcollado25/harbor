@@ -88,7 +88,11 @@ class HarborDayView extends StatelessWidget {
           tertiary: tertiary,
         ),
         const SizedBox(height: 24),
-        _SummaryLine(items: items, currencyCode: currencyCode, tertiary: tertiary),
+        _SummaryLine(
+          items: items,
+          currencyCode: currencyCode,
+          tertiary: tertiary,
+        ),
         const SizedBox(height: 20),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
@@ -96,10 +100,7 @@ class HarborDayView extends StatelessWidget {
           switchOutCurve: Curves.easeOut,
           layoutBuilder: (currentChild, _) => SizedBox(
             width: double.infinity,
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: currentChild,
-            ),
+            child: Align(alignment: Alignment.topLeft, child: currentChild),
           ),
           transitionBuilder: (child, animation) => FadeTransition(
             opacity: animation,
@@ -148,27 +149,27 @@ class _BrandRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Row(
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            decoration: const BoxDecoration(
-              color: harborBrandDot,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            'DROP27PAYMENT',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w400,
-              letterSpacing: 0.8,
-              color: color,
-            ),
-          ),
-        ],
-      );
+    children: [
+      Container(
+        width: 6,
+        height: 6,
+        decoration: const BoxDecoration(
+          color: harborBrandDot,
+          shape: BoxShape.circle,
+        ),
+      ),
+      const SizedBox(width: 6),
+      Text(
+        'DROP27PAYMENT',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.8,
+          color: color,
+        ),
+      ),
+    ],
+  );
 }
 
 class _DateHeader extends StatelessWidget {
@@ -280,7 +281,10 @@ class _WeekDayCell extends StatelessWidget {
     if (isToday) {
       return BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: onSurface.withValues(alpha: 0.38), width: 1.5),
+        border: Border.all(
+          color: onSurface.withValues(alpha: 0.38),
+          width: 1.5,
+        ),
       );
     }
     return const BoxDecoration();
@@ -288,51 +292,53 @@ class _WeekDayCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Column(
-            children: [
-              Text(
-                letter,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
-                  color: isSelected ? onSurface : tertiary,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: 30,
-                height: 30,
-                alignment: Alignment.center,
-                decoration: _dayDecoration(),
-                child: Text(
-                  '${date.day}',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: isSelected || isToday
-                        ? FontWeight.w500
-                        : FontWeight.w400,
-                    color: isSelected ? surface : onSurface,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: 4,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: hasItems ? onSurface.withValues(alpha: 0.45) : Colors.transparent,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
+    color: Colors.transparent,
+    child: InkWell(
+      onTap: onTap,
+      customBorder: const CircleBorder(),
+      child: Column(
+        children: [
+          Text(
+            letter,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: isSelected ? FontWeight.w500 : FontWeight.w400,
+              color: isSelected ? onSurface : tertiary,
+            ),
           ),
-        ),
-      );
+          const SizedBox(height: 6),
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: _dayDecoration(),
+            child: Text(
+              '${date.day}',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: isSelected || isToday
+                    ? FontWeight.w500
+                    : FontWeight.w400,
+                color: isSelected ? surface : onSurface,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: hasItems
+                  ? onSurface.withValues(alpha: 0.45)
+                  : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 class _SummaryLine extends StatelessWidget {
@@ -421,10 +427,7 @@ class _DayStatusMark extends StatelessWidget {
         child: paid
             ? Icon(Icons.check_rounded, size: 16, color: color)
             : DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
                 child: const SizedBox.square(dimension: 6),
               ),
       ),
@@ -446,48 +449,61 @@ class _TimelineRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tertiary = HarborDayView._tertiary(context);
-    final secondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.62);
+    final secondary = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.62);
     final paid = item.kind == DayPlanItemKind.paid;
     final income = item.kind == DayPlanItemKind.income;
     final amountText = income
         ? '+${formatMoney(item.amount, currencyCode)}'
         : formatMoney(item.amount, currencyCode);
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        child: Row(
-          children: [
-            _DayStatusMark(
-              paid: paid,
-              color: paid || income ? harborCalmGreen(context) : tertiary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name, style: const TextStyle(fontSize: 15)),
-                  if (item.tagLabel != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      item.tagLabel!,
-                      style: TextStyle(fontSize: 12, color: secondary),
-                    ),
+    return Semantics(
+      button: onTap != null,
+      excludeSemantics: true,
+      label: '${item.name}. ${item.tagLabel ?? 'Still to pay'}. $amountText',
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          child: Row(
+            children: [
+              _DayStatusMark(
+                paid: paid,
+                color: paid || income
+                    ? harborCalmGreen(context)
+                    : Theme.of(context).brightness == Brightness.light
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: .72)
+                    : tertiary,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(item.name, style: const TextStyle(fontSize: 15)),
+                    if (item.tagLabel != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        item.tagLabel!,
+                        style: TextStyle(fontSize: 12, color: secondary),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            Text(
-              amountText,
-              style: TextStyle(
-                fontSize: 15,
-                color: income ? harborCalmGreen(context) : null,
-                fontFeatures: const [FontFeature.tabularFigures()],
+              Text(
+                amountText,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: income ? harborCalmGreen(context) : null,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -512,7 +528,9 @@ class _EmptyDayState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.62);
+    final secondary = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.62);
     final tertiary = HarborDayView._tertiary(context);
     final weekday = DateFormat('EEEE').format(selectedDay);
 
@@ -562,12 +580,13 @@ class _EmptyDayState extends StatelessWidget {
         ),
         if (upcoming != null) ...[
           const SizedBox(height: 28),
-          Divider(height: 1, thickness: 1, color: Theme.of(context).dividerColor),
-          const SizedBox(height: 12),
-          Text(
-            'Coming up',
-            style: TextStyle(fontSize: 12, color: quaternary),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: Theme.of(context).dividerColor,
           ),
+          const SizedBox(height: 12),
+          Text('Coming up', style: TextStyle(fontSize: 12, color: quaternary)),
           const SizedBox(height: 12),
           _UpcomingRow(entry: upcoming!, currencyCode: currencyCode),
         ],
@@ -582,7 +601,9 @@ class _AllClearMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.62);
+    final secondary = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.62);
     final tertiary = HarborDayView._tertiary(context);
 
     return SizedBox(
@@ -655,7 +676,9 @@ class _UpcomingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final secondary = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.62);
+    final secondary = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.62);
     final income = entry.item.kind == DayPlanItemKind.income;
     final subtitle = DateFormat('EEEE, MMMM d').format(entry.date);
     final amount = income
@@ -747,4 +770,3 @@ class HarborAddBillButton extends StatelessWidget {
     );
   }
 }
-

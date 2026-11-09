@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
+import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -93,9 +94,8 @@ class _PaymentFormPageState extends State<PaymentFormPage> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: false,
                 ),
-                decoration: const InputDecoration(
+                decoration: moneyAmountDecoration.copyWith(
                   labelText: 'Amount paid',
-                  prefixText: '₱ ',
                 ),
                 validator: (value) {
                   final parsed = int.tryParse(value ?? '');

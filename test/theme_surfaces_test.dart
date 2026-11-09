@@ -87,13 +87,13 @@ void main() {
         );
         await tester.pump();
         await tester.scrollUntilVisible(
-          find.text('Drop27Payment · Bills when sahod moves'),
+          find.text('Drop27Payment · Your bills stay on this device'),
           200,
         );
         await tester.pump();
 
         final footer = tester.widget<Text>(
-          find.text('Drop27Payment · Bills when sahod moves'),
+          find.text('Drop27Payment · Your bills stay on this device'),
         );
         final onSurface = theme.colorScheme.onSurface;
         final color = footer.style?.color;

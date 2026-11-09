@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -109,7 +110,10 @@ class _HarborStickyScrollViewState extends State<HarborStickyScrollView> {
                     widget.horizontalPadding,
                     4,
                     widget.horizontalPadding,
-                    widget.bottomPadding,
+                    math.max(
+                      widget.bottomPadding,
+                      MediaQuery.paddingOf(context).bottom + 10 + 56 + 36,
+                    ),
                   ),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate(widget.children),
@@ -123,23 +127,39 @@ class _HarborStickyScrollViewState extends State<HarborStickyScrollView> {
             left: 0,
             right: 0,
             height: headerHeight,
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                widget.horizontalPadding,
-                topInset + 2,
-                widget.horizontalPadding,
-                0,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Theme.of(context).scaffoldBackgroundColor,
+                    Theme.of(context).scaffoldBackgroundColor,
+                    Theme.of(
+                      context,
+                    ).scaffoldBackgroundColor.withValues(alpha: 0),
+                  ],
+                  stops: const [0, 0.78, 1],
+                ),
               ),
-              child: _HarborCollapsingHeaderContent(
-                title: widget.title,
-                subtitle: widget.subtitle,
-                leading: widget.leading,
-                trailing: widget.trailing,
-                progress: progress,
-                keepSubtitleWhenCollapsed: widget.keepSubtitleWhenCollapsed,
-                titleFontWeight: widget.titleFontWeight,
-                expandedTitleSize: widget.expandedTitleSize,
-                collapsedTitleSize: widget.collapsedTitleSize,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  widget.horizontalPadding,
+                  topInset + 2,
+                  widget.horizontalPadding,
+                  0,
+                ),
+                child: _HarborCollapsingHeaderContent(
+                  title: widget.title,
+                  subtitle: widget.subtitle,
+                  leading: widget.leading,
+                  trailing: widget.trailing,
+                  progress: progress,
+                  keepSubtitleWhenCollapsed: widget.keepSubtitleWhenCollapsed,
+                  titleFontWeight: widget.titleFontWeight,
+                  expandedTitleSize: widget.expandedTitleSize,
+                  collapsedTitleSize: widget.collapsedTitleSize,
+                ),
               ),
             ),
           ),
@@ -245,10 +265,7 @@ class _HarborCollapsingHeaderContent extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 8),
-            trailing!,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 8), trailing!],
         ],
       ),
     );

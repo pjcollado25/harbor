@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
+import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../../features/ledger/domain/entities/ledger_entities.dart';
 import '../../../../features/ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -65,10 +66,7 @@ class _IncomeFormPageState extends State<IncomeFormPage> {
           TextFormField(
             controller: _amount,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'Amount',
-              prefixText: '₱ ',
-            ),
+            decoration: moneyAmountDecoration,
             validator: (value) {
               final amount = int.tryParse(value ?? '');
               return amount == null || amount <= 0

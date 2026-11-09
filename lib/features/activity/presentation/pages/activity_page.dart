@@ -6,6 +6,7 @@ import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
+import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -26,13 +27,18 @@ class ActivityPage extends StatelessWidget {
                 a.receivedDate ?? a.expectedDate,
               ),
             );
-      final monthTotal = payments
+      final now = DateTime.now();
+      final monthPayments = payments
           .where(
             (payment) =>
-                payment.date.month == DateTime.now().month &&
-                payment.date.year == DateTime.now().year,
+                payment.date.month == now.month &&
+                payment.date.year == now.year,
           )
-          .fold<int>(0, (sum, payment) => sum + payment.amount);
+          .toList();
+      final monthTotal = monthPayments.fold<int>(
+        0,
+        (sum, payment) => sum + payment.amount,
+      );
       final recurringTotal = snapshot.bills
           .where(
             (bill) => bill.isActive && bill.frequency != BillFrequency.once,
@@ -67,7 +73,7 @@ class ActivityPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${payments.length} entries',
+                        '${monthPayments.length} ${monthPayments.length == 1 ? 'entry' : 'entries'}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(
                             context,
@@ -299,34 +305,13 @@ class ActivityPage extends StatelessWidget {
   );
 
   Future<void> _editGoal(BuildContext context, int? current) async {
-    final controller = TextEditingController(text: current?.toString() ?? '');
-    final amount = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Optional buffer goal'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Amount',
-            prefixText: '₱ ',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(context, int.tryParse(controller.text)),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+    final amount = await showMoneyAmountDialog(
+      context,
+      title: 'Optional buffer goal',
+      initialAmount: current?.toString() ?? '',
     );
-    controller.dispose();
-    if (amount != null && context.mounted)
+    if (amount != null && context.mounted) {
       await context.read<LedgerCubit>().saveBufferGoal(amount);
+    }
   }
 }

@@ -19,6 +19,23 @@ class BillsPage extends StatefulWidget {
 class _BillsPageState extends State<BillsPage> {
   String _filter = 'All';
   String _query = '';
+  final _search = TextEditingController();
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  Future<void> _addBill() async {
+    await context.push('/bills/new');
+    if (!mounted) return;
+    _search.clear();
+    setState(() {
+      _filter = 'All';
+      _query = '';
+    });
+  }
 
   @override
   Widget build(BuildContext context) => BlocBuilder<LedgerCubit, LedgerState>(
@@ -32,15 +49,15 @@ class _BillsPageState extends State<BillsPage> {
       }).toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
       return HarborStickyScrollView(
         title: 'Bills',
-        subtitle:
-            '${snapshot.bills.length} listed obligation${snapshot.bills.length == 1 ? '' : 's'}',
+        subtitle: _listSubtitle(bills.length, snapshot.bills.length),
         trailing: IconButton.filledTonal(
-          onPressed: () => context.push('/bills/new'),
+          onPressed: _addBill,
           icon: const Icon(Icons.add_rounded),
           tooltip: 'Add bill',
         ),
         children: [
           TextField(
+            controller: _search,
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search_rounded),
               hintText: 'Search bills',
@@ -75,9 +92,7 @@ class _BillsPageState extends State<BillsPage> {
                   ? 'Add the obligations you want to keep track of. Drop27Payment stores them only on this device.'
                   : 'Try a different search or filter.',
               actionLabel: snapshot.bills.isEmpty ? 'Add a bill' : null,
-              onAction: snapshot.bills.isEmpty
-                  ? () => context.push('/bills/new')
-                  : null,
+              onAction: snapshot.bills.isEmpty ? _addBill : null,
             )
           else
             ...bills.map(
@@ -98,6 +113,14 @@ class _BillsPageState extends State<BillsPage> {
         .fold<int>(0, (sum, payment) => sum + payment.amount);
     return billMoneyStatus(bill, paid, DateTime.now());
   }
+
+  String _listSubtitle(int shown, int total) {
+    if (_query.isNotEmpty || _filter != 'All') {
+      if (shown == 0) return 'No matching bills';
+      return shown == 1 ? '1 bill' : '$shown bills';
+    }
+    return total == 1 ? '1 bill' : '$total bills';
+  }
 }
 
 class _BillListItem extends StatelessWidget {
@@ -113,80 +136,86 @@ class _BillListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 9),
-      child: InkWell(
-        onTap: () => context.push('/bill/${bill.id}'),
-        borderRadius: BorderRadius.circular(18),
-        child: GlassPanel(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-          radius: 18,
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: .13),
-                  borderRadius: BorderRadius.circular(14),
+      child: Semantics(
+        button: true,
+        excludeSemantics: true,
+        label:
+            '${bill.name}. ${status.label}. ${formatMoney(status.displayAmount, currency)}',
+        child: InkWell(
+          onTap: () => context.push('/bill/${bill.id}'),
+          borderRadius: BorderRadius.circular(18),
+          child: GlassPanel(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+            radius: 18,
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: .13),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    _categoryIcon(bill.category),
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 20,
+                  ),
                 ),
-                child: Icon(
-                  _categoryIcon(bill.category),
-                  color: Theme.of(context).colorScheme.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      bill.name,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${formatDate(bill.dueDate, year: true)} · ${bill.isEstimate ? 'Estimate' : bill.frequency.name}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: .62),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        bill.name,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      formatMoney(status.displayAmount, currency),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      status.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: status.isPaid
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: .58),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${formatDate(bill.dueDate, year: true)} · ${bill.isEstimate ? 'Estimate' : bill.frequency.name}',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: .62),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+                Flexible(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        formatMoney(status.displayAmount, currency),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        status.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: status.isPaid
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: .58),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

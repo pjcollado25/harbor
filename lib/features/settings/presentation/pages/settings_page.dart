@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/formatters.dart';
@@ -10,6 +12,7 @@ import '../../../../shared/widgets/glass_panel.dart';
 import '../../../../shared/widgets/harbor_sticky_scroll.dart';
 import '../../../../shared/widgets/harbor_toast.dart';
 import '../../../../shared/widgets/harbor_widgets.dart';
+import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
@@ -21,14 +24,15 @@ class SettingsPage extends StatelessWidget {
         before.message != after.message || before.failure != after.failure,
     listener: (context, state) {
       final text = state.failure ?? state.message;
-      if (text != null)
+      if (text != null && text.isNotEmpty) {
         showHarborToast(context, text, isError: state.failure != null);
+      }
     },
     builder: (context, state) {
       final prefs = state.snapshot.preferences;
       return HarborStickyScrollView(
         title: 'Settings',
-        subtitle: 'Manage how Drop27Payment looks and works',
+        subtitle: 'Appearance, reminders, and data',
         children: [
           SectionLabel('Appearance'),
           GlassPanel(
@@ -39,7 +43,9 @@ class SettingsPage extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   secondary: const Icon(Icons.dark_mode_outlined),
                   title: const Text('Dark mode'),
-                  subtitle: const Text('Use Drop27Payment with a dark appearance'),
+                  subtitle: const Text(
+                    'Use Drop27Payment with a dark appearance',
+                  ),
                   value: prefs.darkMode,
                   onChanged: (value) => context
                       .read<LedgerCubit>()
@@ -147,13 +153,19 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 13),
                 OutlinedButton.icon(
+                  onPressed: () => _exportFile(context, state.snapshot),
+                  icon: const Icon(Icons.ios_share_rounded),
+                  label: const Text('Save a backup file'),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
                   onPressed: () => _export(context, state.snapshot),
                   icon: const Icon(Icons.copy_all_outlined),
                   label: const Text('Copy a backup'),
                 ),
                 const SizedBox(height: 3),
                 const Text(
-                  'Paste it into a note to keep a copy.',
+                  'Save a file, or copy the text into a note.',
                   style: TextStyle(fontSize: 12, height: 1.4),
                 ),
                 const SizedBox(height: 8),
@@ -178,7 +190,7 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'Drop27Payment · Bills when sahod moves',
+              'Drop27Payment · Your bills stay on this device',
               style: context.harborMutedText(alpha: 0.54, fontSize: 12),
             ),
           ),
@@ -188,42 +200,19 @@ class SettingsPage extends StatelessWidget {
   );
 
   Future<void> _editFunds(BuildContext context, FundsSnapshot? current) async {
-    final controller = TextEditingController(
-      text: current?.amount.toString() ?? '',
+    final amount = await showMoneyAmountDialog(
+      context,
+      title: 'Starting amount',
+      initialAmount: current?.amount.toString() ?? '',
     );
-    final amount = await showDialog<int>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Starting amount'),
-        content: TextField(
-          controller: controller,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(
-            labelText: 'Amount',
-            prefixText: '₱ ',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(context, int.tryParse(controller.text)),
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (amount != null && context.mounted)
+    if (amount != null && context.mounted) {
       await context.read<LedgerCubit>().saveFunds(
         FundsSnapshot(amount: amount, asOf: dateOnly(DateTime.now())),
       );
+    }
   }
 
-  Future<void> _export(BuildContext context, LedgerSnapshot snapshot) async {
+  String _backupJson(LedgerSnapshot snapshot) {
     final data = {
       'exportedAt': DateTime.now().toIso8601String(),
       'currency': snapshot.preferences.currencyCode,
@@ -271,9 +260,24 @@ class SettingsPage extends StatelessWidget {
           )
           .toList(),
     };
-    await Clipboard.setData(
-      ClipboardData(text: const JsonEncoder.withIndent('  ').convert(data)),
+    return const JsonEncoder.withIndent('  ').convert(data);
+  }
+
+  Future<void> _exportFile(
+    BuildContext context,
+    LedgerSnapshot snapshot,
+  ) async {
+    final stamp = DateTime.now().toIso8601String().replaceAll(':', '-');
+    final file = File('${Directory.systemTemp.path}/drop27payment-$stamp.json');
+    await file.writeAsString(_backupJson(snapshot));
+    if (!context.mounted) return;
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], subject: 'Drop27Payment backup'),
     );
+  }
+
+  Future<void> _export(BuildContext context, LedgerSnapshot snapshot) async {
+    await Clipboard.setData(ClipboardData(text: _backupJson(snapshot)));
     if (context.mounted)
       showHarborToast(
         context,
@@ -290,12 +294,15 @@ class SettingsPage extends StatelessWidget {
           'This removes your bills, payments, expected income, and settings from this device. You can’t undo this.',
         ),
         actions: [
-          TextButton(
+          FilledButton(
             onPressed: () => Navigator.pop(context, false),
             child: const Text('Keep my data'),
           ),
-          FilledButton(
+          TextButton(
             onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('Clear data'),
           ),
         ],

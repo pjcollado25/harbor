@@ -20,12 +20,12 @@ class GlassPanel extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final borderColor = dark
         ? Colors.white.withValues(alpha: .055)
-        : Colors.black.withValues(alpha: .04);
+        : Colors.black.withValues(alpha: .14);
     final fillColor =
         tint ??
         (dark
             ? Colors.white.withValues(alpha: .025)
-            : Colors.black.withValues(alpha: .025));
+            : Colors.white.withValues(alpha: .82));
     final shape = BorderRadius.circular(radius);
     return Container(
       decoration: BoxDecoration(

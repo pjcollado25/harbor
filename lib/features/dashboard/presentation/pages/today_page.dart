@@ -1,95 +1,191 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_sticky_scroll.dart';
+import '../../../../shared/widgets/obligation_row.dart';
+import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
-import '../../domain/day_plan_item.dart';
 import '../../domain/today_plan_builder.dart';
-import '../widgets/harbor_day_view.dart';
+import '../widgets/available_buffer_card.dart';
 
-class TodayPage extends StatefulWidget {
+class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
 
   @override
-  State<TodayPage> createState() => _TodayPageState();
-}
+  Widget build(BuildContext context) => BlocBuilder<LedgerCubit, LedgerState>(
+    builder: (context, state) {
+      if (state.isLoading) {
+        return const Scaffold(
+          backgroundColor: _canvas,
+          body: Center(
+            child: CircularProgressIndicator(color: Color(0xFF8E8E93)),
+          ),
+        );
+      }
 
-class _TodayPageState extends State<TodayPage> {
-  late DateTime _selectedDay;
+      final snapshot = state.snapshot;
+      final today = dateOnly(DateTime.now());
+      final windowEnd = today.add(const Duration(days: 30));
+      final bills = snapshot.bills.where((bill) {
+        final due = dateOnly(bill.dueDate);
+        return bill.isActive &&
+            !due.isAfter(windowEnd) &&
+            billRemaining(snapshot, bill) > 0;
+      }).toList()..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+      final nearTermBills = bills
+          .where(
+            (bill) => !dateOnly(
+              bill.dueDate,
+            ).isAfter(today.add(const Duration(days: 7))),
+          )
+          .toList();
+      final nearTermAmount = nearTermBills.fold<int>(
+        0,
+        (total, bill) => total + billRemaining(snapshot, bill),
+      );
+      final bufferSubtitle = _bufferSubtitle(
+        funds: snapshot.funds?.amount ?? 0,
+        currencyCode: snapshot.preferences.currencyCode,
+        bills: bills,
+        nearTermBills: nearTermBills,
+        nearTermAmount: nearTermAmount,
+      );
+      final rowCount = bills.isEmpty ? 1 : bills.length;
 
-  @override
-  void initState() {
-    super.initState();
-    _selectedDay = dateOnly(DateTime.now());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<LedgerCubit, LedgerState>(
-      builder: (context, state) {
-        if (state.isLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final snapshot = state.snapshot;
-        final weekDays = weekDatesFor(_selectedDay);
-        final daysWithItems = weekDays
-            .map(dateOnly)
-            .where((day) => dayHasItems(snapshot, day))
-            .toSet();
-        final items = dayItemsFor(snapshot, _selectedDay);
-        final upcoming = nearestUpcoming(snapshot, _selectedDay);
-
-        return Stack(
-          children: [
-            HarborStickyScrollView(
-              title: harborDayPrimaryTitle(_selectedDay),
-              subtitle: harborDaySecondaryLine(_selectedDay),
-              keepSubtitleWhenCollapsed: true,
-              titleFontWeight: FontWeight.w500,
-              expandedTitleSize: 20,
-              collapsedTitleSize: 16,
-              leading: const HarborBrandRow(),
-              bottomPadding: dayListBottomPadding(context),
-              children: [
-                HarborDayView(
-                  selectedDay: _selectedDay,
-                  weekDays: weekDays,
-                  daysWithItems: daysWithItems,
-                  items: items,
+      return Scaffold(
+        backgroundColor: _canvas,
+        body: HarborStickyScrollView(
+          title: 'Today',
+          subtitle: DateFormat('EEEE, MMMM d').format(DateTime.now()),
+          trailing: IconButton(
+            onPressed: () => context.push('/bills/new'),
+            tooltip: 'Add a bill',
+            icon: const Icon(Icons.add_rounded),
+          ),
+          horizontalPadding: 20,
+          bottomPadding: 126,
+          expandedTitleSize: 30,
+          collapsedTitleSize: 18,
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+              sliver: SliverToBoxAdapter(
+                child: AvailableBufferCard(
+                  amount: snapshot.funds?.amount ?? 0,
                   currencyCode: snapshot.preferences.currencyCode,
-                  onSelectDay: (day) => setState(() => _selectedDay = day),
-                  onAddBill: () => context.push('/bills/new'),
-                  onPlanAhead: () => context.push('/bills/new'),
-                  upcoming: upcoming,
-                  onItemTap: (item) => _openItem(context, item),
-                  showBrand: false,
-                  showDateHeader: false,
-                  showAddBillButton: false,
+                  subtitle: bufferSubtitle,
                 ),
-              ],
+              ),
             ),
-            Positioned(
-              right: 20,
-              bottom: MediaQuery.paddingOf(context).bottom + dayFabBottomGap,
-              child: HarborAddBillButton(
-                expanded: false,
-                onPressed: () => context.push('/bills/new'),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(20, 30, 20, 12),
+              sliver: SliverToBoxAdapter(
+                child: Text(
+                  'Upcoming obligations',
+                  style: TextStyle(
+                    color: Color(0xFFF2F2F7),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList.builder(
+                itemCount: rowCount + 1,
+                itemBuilder: (context, billIndex) {
+                  if (billIndex < rowCount) {
+                    if (bills.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Text(
+                          'No upcoming obligations',
+                          style: TextStyle(
+                            color: Color(0xFF8E8E93),
+                            fontSize: 14,
+                          ),
+                        ),
+                      );
+                    }
+                    final bill = bills[billIndex];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: ObligationRow(
+                        key: ValueKey(bill.id),
+                        name: bill.name,
+                        detail: _dueDescription(bill.dueDate, today),
+                        amount: billRemaining(snapshot, bill),
+                        currencyCode: snapshot.preferences.currencyCode,
+                        category: bill.category,
+                        onTap: () => context.push('/bill/${bill.id}'),
+                      ),
+                    );
+                  }
+
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => context.push('/bills/new'),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: const Text('Add a bill'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: const Color(0xFFB0B0B8),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
-        );
-      },
-    );
+        ),
+      );
+    },
+  );
+}
+
+String _dueDescription(DateTime dueDate, DateTime today) {
+  final due = dateOnly(dueDate);
+  if (due.isBefore(today)) return 'Overdue · ${formatDate(dueDate)}';
+  if (due == today) return 'Due today';
+  if (due == today.add(const Duration(days: 1))) return 'Due tomorrow';
+  return 'Due ${formatDate(dueDate)}';
+}
+
+String _bufferSubtitle({
+  required int funds,
+  required String currencyCode,
+  required List<Bill> bills,
+  required List<Bill> nearTermBills,
+  required int nearTermAmount,
+}) {
+  final billCount = bills.length;
+  final countLabel =
+      '$billCount ${billCount == 1 ? 'bill' : 'bills'} remaining';
+  if (nearTermBills.isEmpty) {
+    return '$countLabel · No bills due in the next 7 days';
+  }
+  if (funds <= 0) {
+    return '$countLabel · Add starting funds to plan upcoming bills';
   }
 
-  void _openItem(BuildContext context, DayPlanItem item) {
-    if (item.id.startsWith('bill:')) {
-      context.push('/bill/${item.id.substring(5)}');
-    } else if (item.id.startsWith('income:')) {
-      context.push('/income/new');
-    }
+  final dueThrough = nearTermBills
+      .map((bill) => dateOnly(bill.dueDate))
+      .reduce((a, b) => a.isAfter(b) ? a : b);
+  final remaining = funds - nearTermAmount;
+  final dueText = dueThrough.isBefore(dateOnly(DateTime.now()))
+      ? 'overdue bills'
+      : 'bills through ${DateFormat('EEEE').format(dueThrough)}';
+  if (remaining >= 0) {
+    return '$countLabel · Entered funds cover $dueText';
   }
+  return '$countLabel · ${formatMoney(remaining.abs(), currencyCode)} short for $dueText';
 }
+
+const _canvas = Color(0xFF0A0A0A);

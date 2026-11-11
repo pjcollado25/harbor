@@ -48,7 +48,7 @@ class ScreenHeading extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) trailing!,
+        ?trailing,
       ],
     ),
   );
@@ -100,7 +100,13 @@ class HarborEmptyState extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.waves_rounded, color: AppTheme.blue, size: 25),
+        Icon(
+          Icons.waves_rounded,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Theme.of(context).colorScheme.onSurface.withValues(alpha: .72)
+              : AppTheme.blue,
+          size: 25,
+        ),
         const SizedBox(height: 14),
         Text(
           title,
@@ -131,29 +137,42 @@ class StatusTag extends StatelessWidget {
   final String label;
   final IconData icon;
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-    decoration: BoxDecoration(
-      color: AppTheme.blue.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(99),
-      border: Border.all(color: AppTheme.blue.withValues(alpha: .18)),
-    ),
-    child: Row(
+  Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final foreground = dark
+        ? Theme.of(context).colorScheme.onSurface.withValues(alpha: .7)
+        : AppTheme.blue;
+    final content = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 14, color: AppTheme.blue),
+        Icon(
+          icon,
+          size: 14,
+          color: dark ? foreground.withValues(alpha: .92) : foreground,
+        ),
         const SizedBox(width: 5),
         Text(
           label,
-          style: const TextStyle(
-            color: AppTheme.blue,
+          style: TextStyle(
+            color: foreground,
             fontSize: 12,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
-    ),
-  );
+    );
+    if (dark) return content;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.blue.withValues(alpha: .12),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: AppTheme.blue.withValues(alpha: .18)),
+      ),
+      child: content,
+    );
+  }
 }
 
 class PagePadding extends StatelessWidget {

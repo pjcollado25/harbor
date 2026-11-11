@@ -6,15 +6,13 @@ import 'package:soft_edge_blur/soft_edge_blur.dart';
 
 import 'harbor_sticky_header_surface.dart';
 
-/// Tab root layout with a collapsing glass header (large at top, compact on scroll).
-///
-/// Uses [SoftEdgeBlur] on the scroll view so list content blurs under the header band
-/// while title copy stays sharp in a separate overlay.
+/// Tab root layout with a collapsing, feathered header.
 class HarborStickyScrollView extends StatefulWidget {
   const HarborStickyScrollView({
     super.key,
     required this.title,
-    required this.children,
+    this.children,
+    this.slivers,
     this.subtitle,
     this.leading,
     this.trailing,
@@ -24,13 +22,14 @@ class HarborStickyScrollView extends StatefulWidget {
     this.titleFontWeight = FontWeight.w700,
     this.expandedTitleSize = 21,
     this.collapsedTitleSize = 17,
-  });
+  }) : assert(slivers == null || children == null);
 
   final String title;
   final String? subtitle;
   final Widget? leading;
   final Widget? trailing;
-  final List<Widget> children;
+  final List<Widget>? children;
+  final List<Widget>? slivers;
   final double horizontalPadding;
   final double bottomPadding;
   final bool keepSubtitleWhenCollapsed;
@@ -82,7 +81,31 @@ class _HarborStickyScrollViewState extends State<HarborStickyScrollView> {
     final headerHeight = collapseRange > 0
         ? (maxHeader - _scrollOffset.clamp(0.0, collapseRange))
         : minHeader;
-
+    final bottomPadding = math.max(
+      widget.bottomPadding,
+      MediaQuery.paddingOf(context).bottom + 10 + 56 + 36,
+    );
+    final scrollView = CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(child: SizedBox(height: maxHeader)),
+        if (widget.slivers == null)
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+              widget.horizontalPadding,
+              4,
+              widget.horizontalPadding,
+              bottomPadding,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(widget.children ?? const []),
+            ),
+          )
+        else ...[
+          ...widget.slivers!,
+          SliverToBoxAdapter(child: SizedBox(height: bottomPadding)),
+        ],
+      ],
+    );
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification.metrics.axis != Axis.vertical) return false;
@@ -102,25 +125,7 @@ class _HarborStickyScrollViewState extends State<HarborStickyScrollView> {
                 sigma: HarborSoftEdgeBlur.defaultTopSigma,
               ),
             ],
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: SizedBox(height: maxHeader)),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    widget.horizontalPadding,
-                    4,
-                    widget.horizontalPadding,
-                    math.max(
-                      widget.bottomPadding,
-                      MediaQuery.paddingOf(context).bottom + 10 + 56 + 36,
-                    ),
-                  ),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate(widget.children),
-                  ),
-                ),
-              ],
-            ),
+            child: scrollView,
           ),
           Positioned(
             top: 0,

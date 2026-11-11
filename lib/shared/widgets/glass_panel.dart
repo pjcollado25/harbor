@@ -18,37 +18,47 @@ class GlassPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    final borderColor = dark
-        ? Colors.white.withValues(alpha: .055)
-        : Colors.black.withValues(alpha: .14);
-    final fillColor =
-        tint ??
-        (dark
-            ? Colors.white.withValues(alpha: .025)
-            : Colors.white.withValues(alpha: .82));
     final shape = BorderRadius.circular(radius);
-    return Container(
-      decoration: BoxDecoration(
+    if (dark) {
+      return ClipRRect(
         borderRadius: shape,
-        boxShadow: [
-          BoxShadow(
-            color: dark
-                ? Colors.black.withValues(alpha: .16)
-                : Colors.black.withValues(alpha: .05),
-            blurRadius: 28,
-            offset: const Offset(0, 8),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: tint ?? Theme.of(context).colorScheme.surface,
+            borderRadius: shape,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: shape,
+          child: Padding(
+            padding: padding,
+            child: Material(color: Colors.transparent, child: child),
+          ),
+        ),
+      );
+    }
+
+    final fillColor = tint ?? Colors.white.withValues(alpha: .82);
+    return ClipRRect(
+      borderRadius: shape,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: shape,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: .05),
+              blurRadius: 28,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
           child: Container(
             decoration: BoxDecoration(color: fillColor, borderRadius: shape),
             foregroundDecoration: BoxDecoration(
               borderRadius: shape,
-              border: Border.all(color: borderColor, width: .65),
+              border: Border.all(
+                color: Colors.black.withValues(alpha: .14),
+                width: .65,
+              ),
             ),
             child: Stack(
               children: [
@@ -63,9 +73,7 @@ class GlassPanel extends StatelessWidget {
                         gradient: LinearGradient(
                           colors: [
                             Colors.transparent,
-                            (dark ? Colors.white : Colors.black).withValues(
-                              alpha: dark ? .025 : .05,
-                            ),
+                            Colors.black.withValues(alpha: .05),
                             Colors.transparent,
                           ],
                         ),

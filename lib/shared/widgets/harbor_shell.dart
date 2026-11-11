@@ -266,7 +266,7 @@ class _AmbientBackdrop extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: dark
-              ? const [Color(0xFF000000), Color(0xFF0A1018)]
+              ? const [Color(0xFF0A0A0A), Color(0xFF0A0A0A)]
               : const [Color(0xFFF8FAFC), Color(0xFFEEF2F6)],
         ),
       ),

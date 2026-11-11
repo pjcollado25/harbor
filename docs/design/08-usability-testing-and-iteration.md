@@ -1,5 +1,11 @@
 # 08 — Usability testing and iteration
 
+## App description
+
+Harbor is an offline-first planning app for people whose income can vary or arrive later than expected. It helps users list bills and due dates, record starting funds and expected income, set reminders, and see how upcoming obligations line up with the information they have entered. Users can record or correct payments and explore how a delayed expected payment could change their plan.
+
+Expected income is kept separate from money already received. Harbor stores data on the device, does not connect to banks or move money, and its plan is based only on user-entered information; it is not a bank balance or guaranteed forecast.
+
 ## Research plan
 
 ### Discovery interviews

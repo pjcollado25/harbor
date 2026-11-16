@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -16,8 +17,60 @@ import '../../../../shared/widgets/money_amount_dialog.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
 
-class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key});
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key, this.packageInfoFuture});
+
+  final Future<PackageInfo>? packageInfoFuture;
+
+  static String formatVersion(PackageInfo info) {
+    if (info.version.isEmpty && info.buildNumber.isEmpty) {
+      return '';
+    }
+    if (info.buildNumber.isEmpty) {
+      return 'Version ${info.version}';
+    }
+    if (info.version.isEmpty) {
+      return 'Build ${info.buildNumber}';
+    }
+    return 'Version ${info.version} (Build ${info.buildNumber})';
+  }
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  late final Future<PackageInfo> _packageInfoFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _packageInfoFuture =
+        (widget.packageInfoFuture ?? _loadPackageInfo()).catchError((_) {
+          return PackageInfo(
+            appName: 'Drop27Payment',
+            packageName: 'com.harbor.app',
+            version: '',
+            buildNumber: '',
+            buildSignature: '',
+          );
+        });
+  }
+
+  static Future<PackageInfo> _loadPackageInfo() async {
+    try {
+      return await PackageInfo.fromPlatform();
+    } catch (_) {
+      return PackageInfo(
+        appName: 'Drop27Payment',
+        packageName: 'com.harbor.app',
+        version: '0.0.1',
+        buildNumber: '2',
+        buildSignature: '',
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => BlocConsumer<LedgerCubit, LedgerState>(
     listenWhen: (before, after) =>
@@ -189,9 +242,32 @@ class SettingsPage extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           Center(
-            child: Text(
-              'Drop27Payment · Your bills stay on this device',
-              style: context.harborMutedText(alpha: 0.54, fontSize: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Drop27Payment · Your bills stay on this device',
+                  style: context.harborMutedText(alpha: 0.54, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                FutureBuilder<PackageInfo>(
+                  future: _packageInfoFuture,
+                  builder: (context, snapshot) {
+                    final info = snapshot.data;
+                    if (info == null) {
+                      return const SizedBox.shrink();
+                    }
+                    final versionText = SettingsPage.formatVersion(info);
+                    if (versionText.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Text(
+                      versionText,
+                      style: context.harborMutedText(alpha: 0.54, fontSize: 12),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ],

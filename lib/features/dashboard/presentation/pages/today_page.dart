@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/harbor_sticky_scroll.dart';
+import '../../../../shared/widgets/harbor_loader.dart';
 import '../../../../shared/widgets/obligation_row.dart';
 import '../../../ledger/domain/entities/ledger_entities.dart';
 import '../../../ledger/presentation/cubit/ledger_cubit.dart';
@@ -20,9 +21,7 @@ class TodayPage extends StatelessWidget {
       if (state.isLoading) {
         return const Scaffold(
           backgroundColor: _canvas,
-          body: Center(
-            child: CircularProgressIndicator(color: Color(0xFF8E8E93)),
-          ),
+          body: Center(child: HarborLoader(size: 180)),
         );
       }
 

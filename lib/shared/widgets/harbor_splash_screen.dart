@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'harbor_loader.dart';
+
 class HarborSplashScreen extends StatefulWidget {
   const HarborSplashScreen({super.key});
 
@@ -78,14 +80,7 @@ class _HarborSplashScreenState extends State<HarborSplashScreen>
                 ),
               ),
               const SizedBox(height: 34),
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: colors.primary.withValues(alpha: .82),
-                ),
-              ),
+              const HarborLoader(size: 180),
             ],
           ),
         ),
